@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memories · You & Me</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script defer src="cloudinary-config.js"></script>
+  <script defer src="script.js"></script>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="nav-brand"><span class="glyph">&#10084;</span> You &amp; Me</a>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="nav-links" id="nav-links">
+      <a href="index.html">Home</a>
+      <a href="memories.html" class="active">Memories</a>
+      <a href="gallery.html">Gallery</a>
+      <a href="message.html">Message</a>
+      <a href="ourstory.html">Our Story</a>
+    </div>
+  </nav>
+
+  <section class="content fade-in">
+    <span class="eyebrow">Snapshots</span>
+    <h1>Our Memories</h1>
+    <p class="lede">
+      Tap "Add a memory" to upload a photo and a little caption — it's saved
+      right in this browser, so it'll still be here next time you visit.
+    </p>
+
+    <div class="memories-grid" id="memories-grid">
+      <button class="memory-card memory-add" id="add-memory-btn" type="button">
+        <span class="add-icon">+</span>
+        <span>Add a memory</span>
+      </button>
+    </div>
+
+    <input type="file" id="memory-file-input" accept="image/*" hidden />
+  </section>
+
+  <footer>made with care, just for you</footer>
+</body>
+</html>

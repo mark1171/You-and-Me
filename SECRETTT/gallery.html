@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gallery · You & Me</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script defer src="cloudinary-config.js"></script>
+  <script defer src="script.js"></script>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="nav-brand"><span class="glyph">&#10084;</span> You &amp; Me</a>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="nav-links" id="nav-links">
+      <a href="index.html">Home</a>
+      <a href="memories.html">Memories</a>
+      <a href="gallery.html" class="active">Gallery</a>
+      <a href="message.html">Message</a>
+      <a href="ourstory.html">Our Story</a>
+    </div>
+  </nav>
+
+  <section class="content fade-in">
+    <span class="eyebrow">In motion</span>
+    <h1>Gallery</h1>
+    <p class="lede">
+      A slow-spinning carousel of our favorite clips. Hover a card to see
+      it up close, click it to upload a photo — saved right in this
+      browser, so it'll still be here next time you visit.
+    </p>
+
+    <div class="carousel-stage">
+      <div class="carousel-container">
+        <div class="carousel-item">Clip 01</div>
+        <div class="carousel-item">Clip 02</div>
+        <div class="carousel-item">Clip 03</div>
+        <div class="carousel-item">Clip 04</div>
+        <div class="carousel-item">Clip 05</div>
+      </div>
+    </div>
+
+    <input type="file" id="carousel-file-input" accept="image/*" hidden />
+
+    <div class="carousel-controls">
+      <button id="prev-btn" aria-label="Previous">&#8592;</button>
+      <button id="next-btn" aria-label="Next">&#8594;</button>
+    </div>
+
+    <div class="carousel-count-control">
+      <label for="carousel-count">Number of photos</label>
+      <input type="number" id="carousel-count" min="2" max="12" value="5" />
+      <button id="carousel-count-apply" type="button" class="btn btn-ghost">Update</button>
+    </div>
+  </section>
+
+  <footer>made with care, just for you</footer>
+</body>
+</html>
