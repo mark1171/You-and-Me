@@ -58,12 +58,23 @@ function saveManifest(binId, data) {
 
 function loadManifest(binId, fallback) {
   const apiKey = window.JSONBIN_API_KEY;
+  const wantsArray = Array.isArray(fallback);
   return fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
     headers: { "X-Master-Key": apiKey },
     cache: "no-store",
   })
     .then((res) => (res.ok ? res.json() : null))
-    .then((json) => (json && json.record !== undefined ? json.record : fallback))
+    .then((json) => {
+      if (!json || json.record === undefined) return fallback;
+      const record = json.record;
+      // Guard against a bin holding the wrong shape of data (e.g. still
+      // has its initial placeholder content) so a stray value can never
+      // crash .forEach()/spread elsewhere in the app.
+      const isRightShape = wantsArray
+        ? Array.isArray(record)
+        : record !== null && typeof record === "object" && !Array.isArray(record);
+      return isRightShape ? record : fallback;
+    })
     .catch(() => fallback);
 }
 
