@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <script defer src="jsonbin-config.js"></script>
   <script defer src="script.js"></script>
 </head>
 <body>
@@ -28,14 +29,32 @@
   <section class="content fade-in">
     <span class="eyebrow">For you</span>
     <h1>A Little Note</h1>
+    <p class="lede">
+      Every letter I've ever written you, all in one place. The newest one
+      opens first — tap any of the others to read it again.
+    </p>
 
-    <div class="letter">
-      <div id="typewriter" data-message="Happy 1st Month, My Love! ❤️
+    <div class="letters-toolbar">
+      <button class="btn btn-ghost" id="add-letter-btn" type="button">+ Write a new letter</button>
+    </div>
+
+    <div class="letter-form" id="letter-form" hidden>
+      <textarea id="letter-textarea" class="story-textarea" rows="7" placeholder="Write what's on your heart…"></textarea>
+      <div class="letter-form-actions">
+        <button class="btn btn-primary" id="save-letter-btn" type="button">Save letter</button>
+        <button class="btn btn-ghost" id="cancel-letter-btn" type="button">Cancel</button>
+      </div>
+    </div>
+
+    <div
+      class="letters-list"
+      id="letters-list"
+      data-fallback-date="1st Month"
+      data-fallback="Happy 1st Month, My Love! ❤️
 I can’t believe it has already been a whole month since we made things official. On one hand, the time has absolutely flown by because I’ve been having the absolute best time with you. On the other hand, it feels like I’ve known and loved you for a lifetime.
 
-Before you came into my life, I didn't realize how much brighter, warmer, and happier my days could actually be. Just knowing I have you to talk to, laugh with, and lean on makes everything so much better."></div>
-      <div class="signature">— always, me</div>
-    </div>
+Before you came into my life, I didn't realize how much brighter, warmer, and happier my days could actually be. Just knowing I have you to talk to, laugh with, and lean on makes everything so much better."
+    ></div>
   </section>
 
   <footer>made with care, just for you</footer>
