@@ -520,23 +520,214 @@ document.addEventListener("DOMContentLoaded", () => {
   loadManifest(MANIFEST_ID, {}).then(applyStory);
 });
 
-/* Typewriter effect for the message page */
+/* Message page — a stack of letters instead of just one. The newest
+   letter opens automatically (typed out like before); older ones
+   collapse into a clickable list so you can revisit them any time.
+   Everything is kept in a small JSON manifest on jsonbin.io, same as
+   the memories/gallery/story pages, so it's still here next visit and
+   syncs across devices. */
 document.addEventListener("DOMContentLoaded", () => {
-  const el = document.getElementById("typewriter");
-  if (!el) return;
-  const message = el.dataset.message || "";
-  el.textContent = "";
-  const caret = document.createElement("span");
-  caret.className = "caret";
-  let i = 0;
+  const listEl = document.getElementById("letters-list");
+  if (!listEl) return;
 
-  const type = () => {
-    if (i < message.length) {
-      el.textContent = message.slice(0, i + 1);
-      el.appendChild(caret);
-      i++;
-      setTimeout(type, 22);
+  const addBtn = document.getElementById("add-letter-btn");
+  const form = document.getElementById("letter-form");
+  const textarea = document.getElementById("letter-textarea");
+  const saveBtn = document.getElementById("save-letter-btn");
+  const cancelBtn = document.getElementById("cancel-letter-btn");
+  const MANIFEST_ID = window.JSONBIN_LETTERS_ID;
+
+  const fallbackText = listEl.dataset.fallback || "";
+  const fallbackDate = listEl.dataset.fallbackDate || "";
+
+  let letters = [];
+  let openId = null;
+
+  const firstLine = (text) => {
+    const line = text.split("\n").find((l) => l.trim().length > 0) || "";
+    return line.length > 70 ? `${line.slice(0, 70).trim()}…` : line;
+  };
+
+  const typeInto = (el, text, done) => {
+    el.textContent = "";
+    const caret = document.createElement("span");
+    caret.className = "caret";
+    let i = 0;
+    const step = () => {
+      if (i < text.length) {
+        el.textContent = text.slice(0, i + 1);
+        el.appendChild(caret);
+        i++;
+        setTimeout(step, 18);
+      } else {
+        caret.remove();
+        if (done) done();
+      }
+    };
+    step();
+  };
+
+  const toggleLetter = (id) => {
+    const wasOpen = openId === id;
+
+    if (openId !== null) {
+      const prevItem = listEl.querySelector(`.letter-item[data-id="${openId}"]`);
+      prevItem?.classList.remove("open");
+    }
+
+    openId = wasOpen ? null : id;
+    if (openId === null) return;
+
+    const item = listEl.querySelector(`.letter-item[data-id="${openId}"]`);
+    const letter = letters.find((l) => l.id === openId);
+    if (!item || !letter) return;
+
+    item.classList.add("open");
+    const textEl = item.querySelector(".letter-text");
+
+    if (letter._typed) {
+      textEl.textContent = letter.text;
+    } else {
+      typeInto(textEl, letter.text, () => { letter._typed = true; });
     }
   };
-  type();
+
+  const deleteLetter = (id) => {
+    if (!window.confirm("Delete this letter?")) return;
+    const updated = letters.filter((l) => l.id !== id);
+    saveManifest(MANIFEST_ID, updated)
+      .then(() => {
+        letters = updated;
+        if (openId === id) openId = letters[0]?.id ?? null;
+        renderLetters();
+      })
+      .catch(() => alert("Couldn't delete that letter — check your connection and try again."));
+  };
+
+  const renderLetters = () => {
+    listEl.innerHTML = "";
+
+    letters.forEach((letter, i) => {
+      const isOpen = letter.id === openId;
+
+      const item = document.createElement("div");
+      item.className = `letter-item${isOpen ? " open" : ""}`;
+      item.dataset.id = String(letter.id);
+      item.style.animationDelay = `${i * 0.06}s`;
+
+      const header = document.createElement("button");
+      header.type = "button";
+      header.className = "letter-header";
+
+      const headerText = document.createElement("span");
+      headerText.className = "letter-header-text";
+
+      const dateEl = document.createElement("span");
+      dateEl.className = "letter-date";
+      dateEl.textContent = letter.date;
+      headerText.appendChild(dateEl);
+
+      const previewEl = document.createElement("span");
+      previewEl.className = "letter-preview";
+      previewEl.textContent = firstLine(letter.text);
+      headerText.appendChild(previewEl);
+
+      header.appendChild(headerText);
+
+      const chevron = document.createElement("span");
+      chevron.className = "letter-chevron";
+      chevron.textContent = "\u203A";
+      header.appendChild(chevron);
+
+      header.addEventListener("click", () => toggleLetter(letter.id));
+      item.appendChild(header);
+
+      const body = document.createElement("div");
+      body.className = "letter-body";
+
+      const bodyInner = document.createElement("div");
+      bodyInner.className = "letter-body-inner";
+
+      const textEl = document.createElement("div");
+      textEl.className = "letter-text";
+      if (isOpen && !letter._typed) {
+        // left empty; typeInto() below will fill it in
+      } else if (isOpen) {
+        textEl.textContent = letter.text;
+      }
+      bodyInner.appendChild(textEl);
+
+      const sig = document.createElement("div");
+      sig.className = "signature";
+      sig.textContent = "— always, me";
+      bodyInner.appendChild(sig);
+
+      body.appendChild(bodyInner);
+      item.appendChild(body);
+
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "letter-delete";
+      delBtn.setAttribute("aria-label", "Delete this letter");
+      delBtn.textContent = "\u00D7";
+      delBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        deleteLetter(letter.id);
+      });
+      item.appendChild(delBtn);
+
+      listEl.appendChild(item);
+
+      if (isOpen && !letter._typed) {
+        typeInto(textEl, letter.text, () => { letter._typed = true; });
+      }
+    });
+  };
+
+  addBtn?.addEventListener("click", () => {
+    form.hidden = false;
+    addBtn.hidden = true;
+    textarea.value = "";
+    textarea.focus();
+  });
+
+  cancelBtn?.addEventListener("click", () => {
+    form.hidden = true;
+    addBtn.hidden = false;
+  });
+
+  saveBtn?.addEventListener("click", () => {
+    const text = textarea.value.trim();
+    if (!text) return;
+
+    const newLetter = {
+      id: Date.now(),
+      date: new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+      text,
+    };
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Saving…";
+
+    const updated = [newLetter, ...letters];
+    saveManifest(MANIFEST_ID, updated)
+      .then(() => {
+        letters = updated;
+        openId = newLetter.id;
+        form.hidden = true;
+        addBtn.hidden = false;
+        renderLetters();
+      })
+      .catch(() => alert("Couldn't save your letter — check your connection and try again."))
+      .finally(() => {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Save letter";
+      });
+  });
+
+  loadManifest(MANIFEST_ID, []).then((saved) => {
+    letters = saved.length ? saved : (fallbackText ? [{ id: 0, date: fallbackDate, text: fallbackText }] : []);
+    openId = letters[0]?.id ?? null;
+    renderLetters();
+  });
 });
