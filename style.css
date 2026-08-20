@@ -790,6 +790,37 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   margin-bottom: 0.3rem;
 }
 
+.story-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+.story-textarea {
+  width: 100%;
+  min-height: 6rem;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.story-textarea:focus {
+  outline: none;
+  border-color: var(--violet-soft);
+}
+
+.story-actions {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 1.8rem;
+}
+
 /* ===== Footer ===== */
 footer {
   text-align: center;
