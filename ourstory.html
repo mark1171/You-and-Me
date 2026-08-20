@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <script defer src="jsonbin-config.js"></script>
   <script defer src="script.js"></script>
 </head>
 <body>
@@ -30,27 +31,36 @@
     <h1>Our Story</h1>
     <p class="lede">ihjidfheaifheifhaoifh.</p>
 
-    <div class="timeline">
-      <div class="timeline-item" style="animation-delay:.05s">
+    <div class="story-toolbar">
+      <button class="btn btn-ghost" id="edit-story-btn" type="button">Edit our story</button>
+    </div>
+
+    <div class="timeline" id="story-timeline">
+      <div class="timeline-item" style="animation-delay:.05s" data-chapter="how-we-met">
         <span class="num">Chapter One</span>
         <h2>How we met</h2>
-        <p>kvgrsoegheosnbfgoiesbnf</p>
+        <p class="story-text">kvgrsoegheosnbfgoiesbnf</p>
       </div>
-      <div class="timeline-item" style="animation-delay:.15s">
+      <div class="timeline-item" style="animation-delay:.15s" data-chapter="first-date">
         <span class="num">Chapter Two</span>
         <h2>The first date</h2>
-        <p>esrgsrgseesfesfesfesfvef</p>
+        <p class="story-text">esrgsrgseesfesfesfesfvef</p>
       </div>
-      <div class="timeline-item" style="animation-delay:.25s">
+      <div class="timeline-item" style="animation-delay:.25s" data-chapter="official">
         <span class="num">Chapter Three</span>
         <h2>Making it official</h2>
-        <p>sefesfsefsefcesfvsevgvesvge</p>
+        <p class="story-text">sefesfsefsefcesfvsevgvesvge</p>
       </div>
-      <div class="timeline-item" style="animation-delay:.35s">
+      <div class="timeline-item" style="animation-delay:.35s" data-chapter="today">
         <span class="num">Chapter Four</span>
         <h2>Today</h2>
-        <p>sfsevgrgbrdtghbdtghbtdfhdtbghdr</p>
+        <p class="story-text">sfsevgrgbrdtghbdtghbtdfhdtbghdr</p>
       </div>
+    </div>
+
+    <div class="story-actions" id="story-actions" hidden>
+      <button class="btn btn-primary" id="save-story-btn" type="button">Save story</button>
+      <button class="btn btn-ghost" id="cancel-story-btn" type="button">Cancel</button>
     </div>
   </section>
 
