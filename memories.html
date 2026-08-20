@@ -35,11 +35,20 @@
       right in this browser, so it'll still be here next time you visit.
     </p>
 
-    <div class="memories-grid" id="memories-grid">
-      <button class="memory-card memory-add" id="add-memory-btn" type="button">
-        <span class="add-icon">+</span>
-        <span>Add a memory</span>
-      </button>
+    <div class="memories-layout">
+      <aside class="memories-filters" role="tablist" aria-label="Filter memories">
+        <button class="filter-btn active" data-filter="all" type="button" role="tab" aria-selected="true">All</button>
+        <button class="filter-btn" data-filter="mark" type="button" role="tab" aria-selected="false">Mark</button>
+        <button class="filter-btn" data-filter="monica" type="button" role="tab" aria-selected="false">Monica</button>
+        <button class="filter-btn" data-filter="us" type="button" role="tab" aria-selected="false">Us</button>
+      </aside>
+
+      <div class="memories-grid" id="memories-grid">
+        <button class="memory-card memory-add" id="add-memory-btn" type="button">
+          <span class="add-icon">+</span>
+          <span>Add a memory</span>
+        </button>
+      </div>
     </div>
 
     <input type="file" id="memory-file-input" accept="image/*" hidden />
