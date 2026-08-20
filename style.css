@@ -1,733 +1,983 @@
-window.addEventListener("load", () => {
-  document.body.classList.add("loaded");
-});
+/* ===== Tokens ===== */
+:root {
+  --bg-deep: #1a1454;
+  --bg-mid: #2a1f72;
+  --violet: #8b5cf6;
+  --violet-soft: #c4b5fd;
+  --blue: #4f7cff;
+  --blue-soft: #93b4ff;
+  --text-main: #f2f0ff;
+  --text-dim: #b6b0e8;
+  --card-bg: rgba(255, 255, 255, 0.06);
+  --card-border: rgba(196, 181, 253, 0.24);
+  --font-display: "Cormorant Garamond", serif;
+  --font-body: "Poppins", sans-serif;
+}
 
-/* Upload a file straight to Cloudinary from the browser (no backend
-   needed) using an unsigned upload preset. Pass a publicId to control
-   the stored filename (used for the manifest + fixed gallery slots);
-   leave it out to let Cloudinary generate a unique one. */
-function uploadToCloudinary(file, publicId) {
-  const cloudName = window.CLOUDINARY_CLOUD_NAME;
-  const uploadPreset = window.CLOUDINARY_UPLOAD_PRESET;
+* { box-sizing: border-box; }
 
-  if (!cloudName || cloudName.startsWith("PASTE_")) {
-    return Promise.reject(new Error("Cloudinary isn't configured yet — check cloudinary-config.js"));
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 15% -10%, rgba(139, 92, 246, 0.55) 0%, transparent 55%),
+    radial-gradient(circle at 100% 10%, rgba(79, 124, 255, 0.45) 0%, transparent 50%),
+    linear-gradient(160deg, var(--bg-mid) 0%, var(--bg-deep) 55%, #100c3d 100%);
+  background-attachment: fixed;
+  color: var(--text-main);
+  font-family: var(--font-body);
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  overflow-x: hidden;
+}
+
+body.loaded { opacity: 1; }
+
+a { color: inherit; text-decoration: none; }
+
+/* ===== Nav ===== */
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem clamp(1.1rem, 4vw, 2.4rem);
+  background: rgba(10, 8, 40, 0.55);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border-bottom: 1px solid var(--card-border);
+  box-shadow: 0 8px 30px rgba(6, 4, 30, 0.25);
+}
+
+.nav-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-main);
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+  transition: opacity 0.25s ease;
+}
+
+.nav-brand:hover { opacity: 0.85; }
+
+.nav-brand .glyph {
+  display: inline-block;
+  font-size: 0.85em;
+  background: linear-gradient(120deg, var(--blue), var(--violet));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: glyphPulse 2.6s ease-in-out infinite;
+}
+
+@keyframes glyphPulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.18); }
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.2rem, 1.4vw, 0.5rem);
+}
+
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--card-border);
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.nav-toggle span {
+  display: block;
+  width: 18px;
+  height: 1.5px;
+  margin: 0 auto;
+  background: var(--text-main);
+  border-radius: 2px;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.nav-toggle.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+.nav-toggle.open span:nth-child(2) { opacity: 0; }
+.nav-toggle.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+nav a:not(.nav-brand) {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  position: relative;
+  transition: color 0.25s ease, background 0.25s ease;
+  white-space: nowrap;
+}
+
+nav a:not(.nav-brand):hover {
+  color: var(--text-main);
+  background: rgba(196, 181, 253, 0.1);
+}
+
+nav a.active {
+  color: var(--text-main);
+  background: linear-gradient(120deg, rgba(79, 124, 255, 0.28), rgba(139, 92, 246, 0.28));
+  box-shadow: inset 0 0 0 1px rgba(196, 181, 253, 0.3);
+}
+
+@media (max-width: 720px) {
+  .nav-toggle { display: flex; }
+
+  .nav-links {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.3rem;
+    padding: 0.8rem 1rem 1.1rem;
+    background: rgba(10, 8, 40, 0.92);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--card-border);
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.35s ease, opacity 0.25s ease;
   }
 
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", uploadPreset);
-  if (publicId) formData.append("public_id", publicId);
-
-  return fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-    method: "POST",
-    body: formData,
-  }).then((res) => {
-    if (!res.ok) throw new Error("Cloudinary upload failed");
-    return res.json();
-  }).then((data) => data.secure_url);
-}
-
-/* Ask Cloudinary to deliver a resized, auto-optimized version of an
-   image instead of the full original — faster loading, same URL host. */
-function optimizedUrl(url, width = 500) {
-  if (!url || !url.includes("/upload/")) return url;
-  return url.replace("/upload/", `/upload/w_${width},q_auto,f_auto/`);
-}
-
-/* The shared list of photos + captions lives in a small JSON "bin" on
-   jsonbin.io — a free service made for exactly this. Cloudinary still
-   stores the actual photos; this just tracks which ones exist and in
-   what order, and (unlike a raw Cloudinary file) can actually be
-   updated after the first save. binId picks which bin (memories vs
-   gallery); each save replaces that bin's whole contents. */
-function saveManifest(binId, data) {
-  const apiKey = window.JSONBIN_API_KEY;
-  return fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Master-Key": apiKey,
-    },
-    body: JSON.stringify(data),
-  }).then((res) => {
-    if (!res.ok) throw new Error("Couldn't save the photo list");
-    return res.json();
-  });
-}
-
-function loadManifest(binId, fallback) {
-  const apiKey = window.JSONBIN_API_KEY;
-  const wantsArray = Array.isArray(fallback);
-  return fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-    headers: { "X-Master-Key": apiKey },
-    cache: "no-store",
-  })
-    .then((res) => (res.ok ? res.json() : null))
-    .then((json) => {
-      if (!json || json.record === undefined) return fallback;
-      const record = json.record;
-      // Guard against a bin holding the wrong shape of data (e.g. still
-      // has its initial placeholder content) so a stray value can never
-      // crash .forEach()/spread elsewhere in the app.
-      const isRightShape = wantsArray
-        ? Array.isArray(record)
-        : record !== null && typeof record === "object" && !Array.isArray(record);
-      return isRightShape ? record : fallback;
-    })
-    .catch(() => fallback);
-}
-
-/* Highlight current page in nav */
-document.addEventListener("DOMContentLoaded", () => {
-  const path = location.pathname.split("/").pop() || "index.html";
-  document.querySelectorAll(".nav-links a").forEach((link) => {
-    if (link.getAttribute("href") === path) link.classList.add("active");
-  });
-});
-
-/* Mobile nav toggle */
-document.addEventListener("DOMContentLoaded", () => {
-  const toggle = document.getElementById("nav-toggle");
-  const links = document.getElementById("nav-links");
-  if (!toggle || !links) return;
-
-  const closeMenu = () => {
-    toggle.classList.remove("open");
-    links.classList.remove("open");
-    toggle.setAttribute("aria-expanded", "false");
-  };
-
-  toggle.addEventListener("click", () => {
-    const isOpen = links.classList.toggle("open");
-    toggle.classList.toggle("open", isOpen);
-    toggle.setAttribute("aria-expanded", String(isOpen));
-  });
-
-  links.querySelectorAll("a").forEach((link) => {
-    link.addEventListener("click", closeMenu);
-  });
-
-  window.addEventListener("resize", () => {
-    if (window.innerWidth > 720) closeMenu();
-  });
-});
-
-/* Ambient blue/violet particle field (index page) */
-document.addEventListener("DOMContentLoaded", () => {
-  const field = document.getElementById("particle-field");
-  if (!field) return;
-  const colors = ["#4f7cff", "#8b5cf6", "#c4b5fd"];
-  const count = 34;
-  for (let i = 0; i < count; i++) {
-    const p = document.createElement("div");
-    p.className = "particle";
-    const size = Math.random() * 4 + 2;
-    p.style.width = `${size}px`;
-    p.style.height = `${size}px`;
-    p.style.left = `${Math.random() * 100}%`;
-    p.style.top = `${Math.random() * 100}%`;
-    p.style.background = colors[i % colors.length];
-    p.style.animationDuration = `${Math.random() * 10 + 8}s`;
-    p.style.animationDelay = `${Math.random() * 6}s`;
-    p.style.animationDirection = Math.random() > 0.5 ? "alternate" : "alternate-reverse";
-    field.appendChild(p);
+  .nav-links.open {
+    max-height: 400px;
+    opacity: 1;
   }
-});
-
-/* Memories page: upload photos to Cloudinary, keep the list of them
-   (with captions + who they're of) in a small JSON manifest on
-   jsonbin.io — so the whole thing works with just two free services,
-   synced everywhere. A sidebar of filter buttons (All/Mark/Monica/Us)
-   narrows which photos are shown. */
-document.addEventListener("DOMContentLoaded", () => {
-  const grid = document.getElementById("memories-grid");
-  if (!grid) return;
-
-  const addBtn = document.getElementById("add-memory-btn");
-  const fileInput = document.getElementById("memory-file-input");
-  const filterBtns = document.querySelectorAll(".filter-btn");
-  const MANIFEST_ID = window.JSONBIN_MEMORIES_ID;
-  const CATEGORIES = ["mark", "monica", "us"];
-
-  const grads = [
-    "linear-gradient(155deg, #4f7cff, #8b5cf6)",
-    "linear-gradient(155deg, #8b5cf6, #c4b5fd)",
-    "linear-gradient(155deg, #3a5fe0, #7c4fd4)",
-  ];
-
-  let allMemories = [];
-  let activeFilter = "all";
-
-  const askCategory = () => {
-    const raw = (window.prompt("Whose memory is this — mark, monica, or us?", "us") || "us")
-      .trim()
-      .toLowerCase();
-    return CATEGORIES.includes(raw) ? raw : "us";
-  };
-
-  const render = () => {
-    grid.querySelectorAll(".memory-card:not(.memory-add)").forEach((el) => el.remove());
-
-    const visible = activeFilter === "all"
-      ? allMemories
-      : allMemories.filter((m) => m.category === activeFilter);
-
-    visible.forEach((memory, i) => {
-      const card = document.createElement("div");
-      card.className = "memory-card has-photo";
-      card.style.backgroundImage = `url(${optimizedUrl(memory.src, 400)})`;
-      card.style.setProperty("--grad", grads[i % grads.length]);
-      card.style.animationDelay = `${i * 0.06}s`;
-
-      const label = document.createElement("span");
-      label.textContent = memory.caption || `Memory ${String(i + 1).padStart(2, "0")}`;
-      card.appendChild(label);
-
-      const del = document.createElement("button");
-      del.type = "button";
-      del.className = "memory-delete";
-      del.setAttribute("aria-label", "Remove this memory");
-      del.textContent = "×";
-      del.addEventListener("click", (e) => {
-        e.stopPropagation();
-        loadManifest(MANIFEST_ID, []).then((current) => {
-          const updated = current.filter((m) => m.src !== memory.src);
-          saveManifest(MANIFEST_ID, updated)
-            .then(() => {
-              allMemories = updated;
-              render();
-            })
-            .catch(() => alert("Couldn't remove that memory — check your connection and try again."));
-        });
-      });
-      card.appendChild(del);
-
-      card.addEventListener("animationend", () => {
-        card.style.animation = "none";
-      }, { once: true });
-
-      grid.insertBefore(card, addBtn);
-    });
-  };
-
-  filterBtns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      activeFilter = btn.dataset.filter;
-      filterBtns.forEach((b) => {
-        b.classList.toggle("active", b === btn);
-        b.setAttribute("aria-selected", String(b === btn));
-      });
-      render();
-    });
-  });
-
-  addBtn?.addEventListener("click", () => fileInput.click());
-
-  fileInput?.addEventListener("change", () => {
-    const file = fileInput.files?.[0];
-    if (!file) return;
-
-    uploadToCloudinary(file)
-      .then((url) => {
-        const caption = window.prompt("Add a short caption for this memory (optional):", "") || "";
-        const category = askCategory();
-        return loadManifest(MANIFEST_ID, []).then((current) => {
-          const updated = [...current, { src: url, caption, category }];
-          return saveManifest(MANIFEST_ID, updated).then(() => {
-            allMemories = updated;
-            render();
-          });
-        });
-      })
-      .then(() => {
-        fileInput.value = "";
-      })
-      .catch((err) => {
-        console.error(err);
-        alert("Sorry, that photo couldn't be saved. Please check your connection and try again.");
-        fileInput.value = "";
-      });
-  });
-
-  loadManifest(MANIFEST_ID, []).then((memories) => {
-    allMemories = memories;
-    render();
-  });
-});
-
-/* 3D rotating carousel (gallery page) — continuous auto-rotate,
-   hover zoom, Cloudinary-only photo storage (manifest + fixed-slot
-   uploads), adjustable slide count, synced across devices */
-document.addEventListener("DOMContentLoaded", () => {
-  const container = document.querySelector(".carousel-container");
-  if (!container) return;
-
-  const MANIFEST_ID = window.JSONBIN_GALLERY_ID;
-  const fileInput = document.getElementById("carousel-file-input");
-  const countInput = document.getElementById("carousel-count");
-  const countApplyBtn = document.getElementById("carousel-count-apply");
-
-  const grads = [
-    "linear-gradient(160deg, #4f7cff, #8b5cf6)",
-    "linear-gradient(160deg, #8b5cf6, #c4b5fd)",
-    "linear-gradient(160deg, #3a5fe0, #7c4fd4)",
-    "linear-gradient(160deg, #6d8bff, #a78bfa)",
-    "linear-gradient(160deg, #5a6fe8, #9061f9)",
-  ];
-
-  let items = [];
-  let total = 0;
-  let rotation = 0;
-  let isPaused = false;
-  let editIndex = null;
-  let currentPhotos = {};
-
-  const applyPhoto = (item, src) => {
-    item.style.backgroundImage = `url(${optimizedUrl(src, 500)})`;
-    item.classList.add("has-photo");
-  };
-
-  const clearPhoto = (item) => {
-    item.style.backgroundImage = "";
-    item.classList.remove("has-photo");
-  };
-
-  const applyRotation = () => {
-    container.style.transform = `rotateY(${rotation}deg)`;
-  };
-
-  /* space items evenly around a circle sized to fit the item width */
-  const layoutItems = () => {
-    const itemWidth = 220;
-    const minRadius = Math.round((itemWidth / 2) / Math.tan(Math.PI / total));
-    const radius = Math.min(500, Math.max(180, Math.round(minRadius * 2)));
-    items.forEach((item, i) => {
-      const angle = (360 / total) * i;
-      item.style.setProperty("--base-transform", `rotateY(${angle}deg) translateZ(${radius}px)`);
-    });
-  };
-
-  /* rebuild the carousel with a given number of slots, applying any
-     photos already saved in the manifest */
-  const buildItems = (count) => {
-    container.innerHTML = "";
-    items = [];
-
-    for (let i = 0; i < count; i++) {
-      const item = document.createElement("div");
-      item.className = "carousel-item";
-      item.style.setProperty("--grad", grads[i % grads.length]);
-
-      const label = document.createElement("span");
-      label.className = "item-label";
-      label.textContent = `Clip ${String(i + 1).padStart(2, "0")}`;
-      item.appendChild(label);
-
-      const hint = document.createElement("span");
-      hint.className = "item-edit-hint";
-      hint.textContent = "Click to add photo";
-      item.appendChild(hint);
-
-      const removeBtn = document.createElement("button");
-      removeBtn.type = "button";
-      removeBtn.className = "item-remove";
-      removeBtn.setAttribute("aria-label", "Remove photo");
-      removeBtn.textContent = "×";
-      removeBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        loadManifest(MANIFEST_ID, {}).then((current) => {
-          const updated = { ...current };
-          delete updated[i];
-          saveManifest(MANIFEST_ID, updated)
-            .then(() => {
-              currentPhotos = updated;
-              clearPhoto(item);
-            })
-            .catch(() => alert("Couldn't remove that photo — check your connection and try again."));
-        });
-      });
-      item.appendChild(removeBtn);
-
-      item.addEventListener("click", () => {
-        editIndex = i;
-        fileInput?.click();
-      });
-
-      if (currentPhotos[i]) applyPhoto(item, currentPhotos[i]);
-
-      container.appendChild(item);
-      items.push(item);
-    }
-
-    total = count;
-    layoutItems();
-    applyRotation();
-  };
-
-  fileInput?.addEventListener("change", () => {
-    const file = fileInput.files?.[0];
-    if (!file || editIndex === null) return;
-
-    uploadToCloudinary(file, `you-and-me-gallery-slot-${editIndex}-${Date.now()}`)
-      .then((url) => {
-        return loadManifest(MANIFEST_ID, {}).then((current) => {
-          const updated = { ...current, [editIndex]: url };
-          return saveManifest(MANIFEST_ID, updated).then(() => {
-            currentPhotos = updated;
-            applyPhoto(items[editIndex], url);
-          });
-        });
-      })
-      .then(() => {
-        fileInput.value = "";
-        editIndex = null;
-      })
-      .catch((err) => {
-        console.error(err);
-        alert("Sorry, that photo couldn't be saved. Please check your connection and try again.");
-        fileInput.value = "";
-        editIndex = null;
-      });
-  });
-
-  container.style.transition = "none";
-
-  const tick = () => {
-    if (!isPaused) {
-      rotation -= 0.05; // degrees per frame — tweak for faster/slower spin
-      applyRotation();
-    }
-    requestAnimationFrame(tick);
-  };
-  requestAnimationFrame(tick);
-
-  document.getElementById("next-btn")?.addEventListener("click", () => {
-    rotation -= 360 / total;
-    applyRotation();
-  });
-
-  document.getElementById("prev-btn")?.addEventListener("click", () => {
-    rotation += 360 / total;
-    applyRotation();
-  });
-
-  container.addEventListener("mouseenter", () => { isPaused = true; });
-  container.addEventListener("mouseleave", () => { isPaused = false; });
-
-  countApplyBtn?.addEventListener("click", () => {
-    let count = parseInt(countInput.value, 10);
-    if (Number.isNaN(count)) return;
-    count = Math.min(12, Math.max(2, count));
-    countInput.value = count;
-    buildItems(count);
-  });
-
-  const initialCount = countInput
-    ? Math.min(12, Math.max(2, parseInt(countInput.value, 10) || 5))
-    : 5;
-
-  loadManifest(MANIFEST_ID, {}).then((photos) => {
-    currentPhotos = photos;
-    buildItems(initialCount);
-  });
-});
-
-/* Our Story page — "Edit our story" turns each chapter's paragraph
-   into a textarea; "Save story" writes the text to a small JSON
-   manifest on jsonbin.io so it shows up the same on every device. */
-document.addEventListener("DOMContentLoaded", () => {
-  const timeline = document.getElementById("story-timeline");
-  if (!timeline) return;
-
-  const editBtn = document.getElementById("edit-story-btn");
-  const actions = document.getElementById("story-actions");
-  const saveBtn = document.getElementById("save-story-btn");
-  const cancelBtn = document.getElementById("cancel-story-btn");
-  const MANIFEST_ID = window.JSONBIN_STORY_ID;
-
-  const chapters = Array.from(timeline.querySelectorAll(".timeline-item"));
-  let originalTexts = {};
-  let editing = false;
-
-  const applyStory = (story) => {
-    chapters.forEach((item) => {
-      const key = item.dataset.chapter;
-      const p = item.querySelector(".story-text");
-      if (story[key]) p.textContent = story[key];
-    });
-  };
-
-  const enterEditMode = () => {
-    editing = true;
-    editBtn.textContent = "Editing…";
-    editBtn.disabled = true;
-    actions.hidden = false;
-
-    chapters.forEach((item) => {
-      const p = item.querySelector(".story-text");
-      originalTexts[item.dataset.chapter] = p.textContent;
-
-      const textarea = document.createElement("textarea");
-      textarea.className = "story-textarea";
-      textarea.value = p.textContent.trim();
-      textarea.rows = 4;
-      p.replaceWith(textarea);
-    });
-  };
-
-  const exitEditMode = (restore) => {
-    editing = false;
-    editBtn.textContent = "Edit our story";
-    editBtn.disabled = false;
-    actions.hidden = true;
-
-    chapters.forEach((item) => {
-      const textarea = item.querySelector(".story-textarea");
-      if (!textarea) return;
-      const p = document.createElement("p");
-      p.className = "story-text";
-      p.textContent = restore ? originalTexts[item.dataset.chapter] : textarea.value.trim();
-      textarea.replaceWith(p);
-    });
-  };
-
-  editBtn?.addEventListener("click", () => {
-    if (!editing) enterEditMode();
-  });
-
-  cancelBtn?.addEventListener("click", () => exitEditMode(true));
-
-  saveBtn?.addEventListener("click", () => {
-    const story = {};
-    chapters.forEach((item) => {
-      const textarea = item.querySelector(".story-textarea");
-      story[item.dataset.chapter] = (textarea?.value || "").trim();
-    });
-
-    saveBtn.disabled = true;
-    saveBtn.textContent = "Saving…";
-
-    saveManifest(MANIFEST_ID, story)
-      .then(() => exitEditMode(false))
-      .catch(() => alert("Couldn't save your story — check your connection and try again."))
-      .finally(() => {
-        saveBtn.disabled = false;
-        saveBtn.textContent = "Save story";
-      });
-  });
-
-  loadManifest(MANIFEST_ID, {}).then(applyStory);
-});
-
-/* Message page — a stack of letters instead of just one. The newest
-   letter opens automatically (typed out like before); older ones
-   collapse into a clickable list so you can revisit them any time.
-   Everything is kept in a small JSON manifest on jsonbin.io, same as
-   the memories/gallery/story pages, so it's still here next visit and
-   syncs across devices. */
-document.addEventListener("DOMContentLoaded", () => {
-  const listEl = document.getElementById("letters-list");
-  if (!listEl) return;
-
-  const addBtn = document.getElementById("add-letter-btn");
-  const form = document.getElementById("letter-form");
-  const textarea = document.getElementById("letter-textarea");
-  const saveBtn = document.getElementById("save-letter-btn");
-  const cancelBtn = document.getElementById("cancel-letter-btn");
-  const MANIFEST_ID = window.JSONBIN_LETTERS_ID;
-
-  const fallbackText = listEl.dataset.fallback || "";
-  const fallbackDate = listEl.dataset.fallbackDate || "";
-
-  let letters = [];
-  let openId = null;
-
-  const firstLine = (text) => {
-    const line = text.split("\n").find((l) => l.trim().length > 0) || "";
-    return line.length > 70 ? `${line.slice(0, 70).trim()}…` : line;
-  };
-
-  const typeInto = (el, text, done) => {
-    el.textContent = "";
-    const caret = document.createElement("span");
-    caret.className = "caret";
-    let i = 0;
-    const step = () => {
-      if (i < text.length) {
-        el.textContent = text.slice(0, i + 1);
-        el.appendChild(caret);
-        i++;
-        setTimeout(step, 18);
-      } else {
-        caret.remove();
-        if (done) done();
-      }
-    };
-    step();
-  };
-
-  const toggleLetter = (id) => {
-    const wasOpen = openId === id;
-
-    if (openId !== null) {
-      const prevItem = listEl.querySelector(`.letter-item[data-id="${openId}"]`);
-      prevItem?.classList.remove("open");
-    }
-
-    openId = wasOpen ? null : id;
-    if (openId === null) return;
-
-    const item = listEl.querySelector(`.letter-item[data-id="${openId}"]`);
-    const letter = letters.find((l) => l.id === openId);
-    if (!item || !letter) return;
-
-    item.classList.add("open");
-    const textEl = item.querySelector(".letter-text");
-
-    if (letter._typed) {
-      textEl.textContent = letter.text;
-    } else {
-      typeInto(textEl, letter.text, () => { letter._typed = true; });
-    }
-  };
-
-  const deleteLetter = (id) => {
-    if (!window.confirm("Delete this letter?")) return;
-    const updated = letters.filter((l) => l.id !== id);
-    saveManifest(MANIFEST_ID, updated)
-      .then(() => {
-        letters = updated;
-        if (openId === id) openId = letters[0]?.id ?? null;
-        renderLetters();
-      })
-      .catch(() => alert("Couldn't delete that letter — check your connection and try again."));
-  };
-
-  const renderLetters = () => {
-    listEl.innerHTML = "";
-
-    letters.forEach((letter, i) => {
-      const isOpen = letter.id === openId;
-
-      const item = document.createElement("div");
-      item.className = `letter-item${isOpen ? " open" : ""}`;
-      item.dataset.id = String(letter.id);
-      item.style.animationDelay = `${i * 0.06}s`;
-
-      const header = document.createElement("button");
-      header.type = "button";
-      header.className = "letter-header";
-
-      const headerText = document.createElement("span");
-      headerText.className = "letter-header-text";
-
-      const dateEl = document.createElement("span");
-      dateEl.className = "letter-date";
-      dateEl.textContent = letter.date;
-      headerText.appendChild(dateEl);
-
-      const previewEl = document.createElement("span");
-      previewEl.className = "letter-preview";
-      previewEl.textContent = firstLine(letter.text);
-      headerText.appendChild(previewEl);
-
-      header.appendChild(headerText);
-
-      const chevron = document.createElement("span");
-      chevron.className = "letter-chevron";
-      chevron.textContent = "\u203A";
-      header.appendChild(chevron);
-
-      header.addEventListener("click", () => toggleLetter(letter.id));
-      item.appendChild(header);
-
-      const body = document.createElement("div");
-      body.className = "letter-body";
-
-      const bodyInner = document.createElement("div");
-      bodyInner.className = "letter-body-inner";
-
-      const textEl = document.createElement("div");
-      textEl.className = "letter-text";
-      if (isOpen && !letter._typed) {
-        // left empty; typeInto() below will fill it in
-      } else if (isOpen) {
-        textEl.textContent = letter.text;
-      }
-      bodyInner.appendChild(textEl);
-
-      const sig = document.createElement("div");
-      sig.className = "signature";
-      sig.textContent = "— always, me";
-      bodyInner.appendChild(sig);
-
-      body.appendChild(bodyInner);
-      item.appendChild(body);
-
-      const delBtn = document.createElement("button");
-      delBtn.type = "button";
-      delBtn.className = "letter-delete";
-      delBtn.setAttribute("aria-label", "Delete this letter");
-      delBtn.textContent = "\u00D7";
-      delBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        deleteLetter(letter.id);
-      });
-      item.appendChild(delBtn);
-
-      listEl.appendChild(item);
-
-      if (isOpen && !letter._typed) {
-        typeInto(textEl, letter.text, () => { letter._typed = true; });
-      }
-    });
-  };
-
-  addBtn?.addEventListener("click", () => {
-    form.hidden = false;
-    addBtn.hidden = true;
-    textarea.value = "";
-    textarea.focus();
-  });
-
-  cancelBtn?.addEventListener("click", () => {
-    form.hidden = true;
-    addBtn.hidden = false;
-  });
-
-  saveBtn?.addEventListener("click", () => {
-    const text = textarea.value.trim();
-    if (!text) return;
-
-    const newLetter = {
-      id: Date.now(),
-      date: new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
-      text,
-    };
-
-    saveBtn.disabled = true;
-    saveBtn.textContent = "Saving…";
-
-    const updated = [newLetter, ...letters];
-    saveManifest(MANIFEST_ID, updated)
-      .then(() => {
-        letters = updated;
-        openId = newLetter.id;
-        form.hidden = true;
-        addBtn.hidden = false;
-        renderLetters();
-      })
-      .catch(() => alert("Couldn't save your letter — check your connection and try again."))
-      .finally(() => {
-        saveBtn.disabled = false;
-        saveBtn.textContent = "Save letter";
-      });
-  });
-
-  loadManifest(MANIFEST_ID, []).then((saved) => {
-    letters = saved.length ? saved : (fallbackText ? [{ id: 0, date: fallbackDate, text: fallbackText }] : []);
-    openId = letters[0]?.id ?? null;
-    renderLetters();
-  });
-});
+
+  nav a:not(.nav-brand) {
+    text-align: center;
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* ===== Content shell ===== */
+.content {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: clamp(2rem, 6vw, 4.5rem) 1.5rem 5rem;
+}
+
+.fade-in {
+  animation: fadeInUp 0.9s ease both;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.eyebrow {
+  display: block;
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--blue-soft);
+  margin-bottom: 0.9rem;
+}
+
+h1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2.4rem, 6vw, 4.2rem);
+  line-height: 1.05;
+  margin: 0 0 1rem;
+  background: linear-gradient(120deg, var(--text-main) 30%, var(--violet-soft) 65%, var(--blue-soft) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+  color: var(--violet-soft);
+  margin: 0 0 0.6rem;
+}
+
+p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
+
+.lede {
+  max-width: 46ch;
+  font-size: 1.05rem;
+}
+
+/* ===== Buttons ===== */
+.btn-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 2rem; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.6rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--card-border);
+  transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(120deg, var(--blue), var(--violet));
+  color: #fff;
+  border: none;
+}
+
+.btn-primary:hover { transform: translateY(-2px); filter: brightness(1.08); }
+
+.btn-ghost:hover {
+  border-color: var(--violet-soft);
+  transform: translateY(-2px);
+  background: rgba(196, 181, 253, 0.06);
+}
+
+/* ===== Hero (index) ===== */
+.hero {
+  position: relative;
+  min-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: clamp(2rem, 6vw, 4.5rem) 1.5rem;
+  max-width: 980px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 620px;
+  height: 620px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.22) 0%, rgba(79, 124, 255, 0.12) 45%, transparent 72%);
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  animation: pulseGlow 6s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+  50%       { opacity: 1;   transform: translate(-50%, -50%) scale(1.08); }
+}
+
+#particle-field {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(0.5px);
+  opacity: 0.55;
+  animation: drift linear infinite;
+}
+
+@keyframes drift {
+  from { transform: translateY(0) translateX(0); }
+  to   { transform: translateY(-40px) translateX(12px); }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hero .lede { margin-left: auto; margin-right: auto; }
+.hero .btn-row { justify-content: center; }
+
+.stat-row {
+  display: flex;
+  justify-content: center;
+  gap: clamp(1.5rem, 5vw, 3rem);
+  margin-top: 2.6rem;
+  flex-wrap: wrap;
+}
+
+.stat-num {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  color: var(--text-main);
+}
+
+.stat-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* ===== Memories grid ===== */
+.memories-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 2.2rem;
+  margin-top: 2.5rem;
+}
+
+.memories-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  flex-shrink: 0;
+  width: 128px;
+  position: sticky;
+  top: 1.5rem;
+}
+
+.filter-btn {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  padding: 0.55rem 1rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.filter-btn:hover {
+  color: var(--text-main);
+  border-color: var(--violet-soft);
+}
+
+.filter-btn.active {
+  color: var(--text-main);
+  background: linear-gradient(135deg, rgba(79, 124, 255, 0.35), rgba(139, 92, 246, 0.35));
+  border-color: var(--violet-soft);
+}
+
+.memories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 140px));
+  justify-content: center;
+  gap: 1.1rem;
+  flex: 1;
+}
+
+@media (max-width: 720px) {
+  .memories-layout {
+    flex-direction: column;
+  }
+
+  .memories-filters {
+    flex-direction: row;
+    width: 100%;
+    overflow-x: auto;
+    position: static;
+    padding-bottom: 0.3rem;
+  }
+
+  .filter-btn {
+    white-space: nowrap;
+  }
+}
+
+.memory-card {
+  aspect-ratio: 4 / 5;
+  border-radius: 16px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  display: flex;
+  align-items: flex-end;
+  padding: 0.7rem;
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 0.7s ease forwards;
+  margin: 0;
+  font: inherit;
+  width: 100%;
+  max-width: 140px;
+  text-align: left;
+}
+
+.memory-card:not(.memory-add)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--grad, linear-gradient(155deg, var(--blue), var(--violet)));
+  opacity: 0.35;
+}
+
+.memory-card span {
+  position: relative;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  color: var(--text-main);
+  text-transform: uppercase;
+}
+
+.memory-card.has-photo {
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transform-origin: center;
+}
+
+.memory-card.has-photo:hover {
+  transform: scale(1.18);
+  z-index: 5;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+}
+
+.memory-card.has-photo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.55), transparent 55%);
+  opacity: 1;
+}
+
+.memory-card.has-photo span {
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.memory-card.has-photo:hover span {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.memory-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(10, 8, 40, 0.55);
+  color: var(--text-main);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.2s ease, background 0.2s ease;
+}
+
+.memory-card:hover .memory-delete { opacity: 1; }
+.memory-delete:hover { background: rgba(139, 92, 246, 0.7); }
+
+.memory-add {
+  align-self: start;
+  font-family: var(--font-body);
+  color: var(--text-dim);
+  cursor: pointer;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: center;
+  justify-content: center;
+  border-style: dashed;
+  background: rgba(255, 255, 255, 0.02);
+  transition: border-color 0.25s ease, color 0.25s ease, background 0.25s ease;
+}
+
+.memory-add span:last-child {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+}
+
+.memory-add:hover {
+  border-color: var(--violet-soft);
+  color: var(--text-main);
+  background: rgba(196, 181, 253, 0.06);
+}
+
+.memory-add .add-icon {
+  font-size: 1.2rem;
+  font-weight: 300;
+  line-height: 1;
+}
+
+/* ===== Gallery / 3D carousel ===== */
+.carousel-stage {
+  perspective: 1400px;
+  height: 380px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 3rem;
+}
+
+.carousel-container {
+  position: relative;
+  width: 220px;
+  height: 300px;
+  transform-style: preserve-3d;
+  transition: transform 0.2s;
+}
+
+.carousel-item {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  border: 1px solid var(--card-border);
+  background: var(--grad, linear-gradient(160deg, var(--blue), var(--violet)));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: #fff;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+  backface-visibility: hidden;
+  cursor: pointer;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+  transform: var(--base-transform, none) scale(var(--hover-scale, 1));
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.carousel-item:hover {
+  --hover-scale: 1.35;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
+}
+
+.carousel-item .item-label {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.carousel-item.has-photo .item-label {
+  display: none;
+}
+
+.carousel-item.has-photo {
+  background-color: transparent;
+}
+
+.item-edit-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.6rem;
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-main);
+  background: rgba(10, 8, 40, 0.5);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.carousel-item:hover .item-edit-hint {
+  opacity: 1;
+}
+
+.item-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(10, 8, 40, 0.6);
+  color: var(--text-main);
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 3;
+  display: none;
+  opacity: 0;
+  transition: opacity 0.2s ease, background 0.2s ease;
+}
+
+.carousel-item.has-photo .item-remove {
+  display: block;
+}
+
+.carousel-item.has-photo:hover .item-remove {
+  opacity: 1;
+}
+
+.item-remove:hover {
+  background: rgba(139, 92, 246, 0.75);
+}
+
+.carousel-controls {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
+
+.carousel-controls button {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--card-border);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-main);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.carousel-controls button:hover {
+  background: linear-gradient(120deg, var(--blue), var(--violet));
+  transform: translateY(-2px);
+}
+
+.carousel-count-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  margin-top: 1.8rem;
+  flex-wrap: wrap;
+}
+
+.carousel-count-control label {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.carousel-count-control input[type="number"] {
+  width: 64px;
+  padding: 0.45rem 0.5rem;
+  border-radius: 10px;
+  border: 1px solid var(--card-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.carousel-count-control input[type="number"]:focus {
+  outline: none;
+  border-color: var(--violet-soft);
+}
+
+.carousel-count-control .btn {
+  padding: 0.5rem 1.2rem;
+  font-size: 0.72rem;
+}
+
+/* ===== Message page ===== */
+.letter {
+  margin-top: 2rem;
+  border-radius: 22px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  padding: clamp(1.6rem, 5vw, 3rem);
+  position: relative;
+}
+
+.letter::before {
+  content: "";
+  position: absolute;
+  top: -1px; left: -1px; right: -1px;
+  height: 3px;
+  border-radius: 22px 22px 0 0;
+  background: linear-gradient(90deg, var(--blue), var(--violet));
+}
+
+#typewriter {
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2.4vw, 1.5rem);
+  color: var(--text-main);
+  line-height: 1.7;
+  min-height: 8em;
+  white-space: pre-wrap;
+}
+
+.caret {
+  display: inline-block;
+  width: 2px;
+  background: var(--violet-soft);
+  margin-left: 2px;
+  animation: blink 0.9s steps(1) infinite;
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+
+.signature {
+  margin-top: 1.5rem;
+  text-align: right;
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--blue-soft);
+}
+
+/* ===== Letters (message page) ===== */
+.letters-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+.letter-form {
+  margin-top: 1rem;
+  border-radius: 22px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  padding: clamp(1.2rem, 4vw, 1.8rem);
+}
+
+.letter-form-actions {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.letters-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.letter-item {
+  border-radius: 22px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  position: relative;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(14px);
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+.letter-item::before {
+  content: "";
+  position: absolute;
+  top: -1px; left: -1px; right: -1px;
+  height: 3px;
+  border-radius: 22px 22px 0 0;
+  background: linear-gradient(90deg, var(--blue), var(--violet));
+  opacity: 0.35;
+  transition: opacity 0.25s ease;
+}
+
+.letter-item.open::before { opacity: 1; }
+
+.letter-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: clamp(1.1rem, 4vw, 1.5rem) clamp(1.4rem, 5vw, 2.2rem);
+  background: none;
+  border: none;
+  color: var(--text-main);
+  text-align: left;
+  cursor: pointer;
+}
+
+.letter-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.letter-date {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--blue-soft);
+  letter-spacing: 0.1em;
+}
+
+.letter-preview {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: opacity 0.2s ease;
+}
+
+.letter-item.open .letter-preview { opacity: 0; height: 0; }
+
+.letter-chevron {
+  flex-shrink: 0;
+  font-size: 1.3rem;
+  color: var(--violet-soft);
+  transition: transform 0.3s ease;
+}
+
+.letter-item.open .letter-chevron { transform: rotate(90deg); }
+
+.letter-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.45s ease;
+}
+
+.letter-item.open .letter-body { max-height: 3000px; }
+
+.letter-body-inner {
+  padding: 0 clamp(1.4rem, 5vw, 2.2rem) clamp(1.4rem, 5vw, 2.2rem);
+}
+
+.letter-text {
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+  color: var(--text-main);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.letter-delete {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(10, 8, 40, 0.55);
+  color: var(--text-main);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.2s ease, background 0.2s ease;
+}
+
+.letter-item:hover .letter-delete { opacity: 1; }
+.letter-delete:hover { background: rgba(139, 92, 246, 0.7); }
+
+/* ===== Our story / timeline ===== */
+.timeline {
+  position: relative;
+  margin-top: 3rem;
+  padding-left: 1.6rem;
+  border-left: 1px solid var(--card-border);
+}
+
+.timeline-item {
+  position: relative;
+  padding: 0 0 2.4rem 1.6rem;
+  opacity: 0;
+  transform: translateY(14px);
+  animation: fadeInUp 0.7s ease forwards;
+}
+
+.timeline-item::before {
+  content: "";
+  position: absolute;
+  left: -1.98rem;
+  top: 0.3rem;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: linear-gradient(120deg, var(--blue), var(--violet));
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.18);
+}
+
+.timeline-item .num {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--blue-soft);
+  letter-spacing: 0.1em;
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+.story-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+.story-textarea {
+  width: 100%;
+  min-height: 6rem;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.story-textarea:focus {
+  outline: none;
+  border-color: var(--violet-soft);
+}
+
+.story-actions {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 1.8rem;
+}
+
+/* ===== Footer ===== */
+footer {
+  text-align: center;
+  padding: 2rem 1rem 3rem;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 600px) {
+  .hero { align-items: center; text-align: center; }
+  .stat-row { justify-content: center; }
+  .btn-row { justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
