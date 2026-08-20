@@ -433,6 +433,93 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+/* Our Story page — "Edit our story" turns each chapter's paragraph
+   into a textarea; "Save story" writes the text to a small JSON
+   manifest on jsonbin.io so it shows up the same on every device. */
+document.addEventListener("DOMContentLoaded", () => {
+  const timeline = document.getElementById("story-timeline");
+  if (!timeline) return;
+
+  const editBtn = document.getElementById("edit-story-btn");
+  const actions = document.getElementById("story-actions");
+  const saveBtn = document.getElementById("save-story-btn");
+  const cancelBtn = document.getElementById("cancel-story-btn");
+  const MANIFEST_ID = window.JSONBIN_STORY_ID;
+
+  const chapters = Array.from(timeline.querySelectorAll(".timeline-item"));
+  let originalTexts = {};
+  let editing = false;
+
+  const applyStory = (story) => {
+    chapters.forEach((item) => {
+      const key = item.dataset.chapter;
+      const p = item.querySelector(".story-text");
+      if (story[key]) p.textContent = story[key];
+    });
+  };
+
+  const enterEditMode = () => {
+    editing = true;
+    editBtn.textContent = "Editing…";
+    editBtn.disabled = true;
+    actions.hidden = false;
+
+    chapters.forEach((item) => {
+      const p = item.querySelector(".story-text");
+      originalTexts[item.dataset.chapter] = p.textContent;
+
+      const textarea = document.createElement("textarea");
+      textarea.className = "story-textarea";
+      textarea.value = p.textContent.trim();
+      textarea.rows = 4;
+      p.replaceWith(textarea);
+    });
+  };
+
+  const exitEditMode = (restore) => {
+    editing = false;
+    editBtn.textContent = "Edit our story";
+    editBtn.disabled = false;
+    actions.hidden = true;
+
+    chapters.forEach((item) => {
+      const textarea = item.querySelector(".story-textarea");
+      if (!textarea) return;
+      const p = document.createElement("p");
+      p.className = "story-text";
+      p.textContent = restore ? originalTexts[item.dataset.chapter] : textarea.value.trim();
+      textarea.replaceWith(p);
+    });
+  };
+
+  editBtn?.addEventListener("click", () => {
+    if (!editing) enterEditMode();
+  });
+
+  cancelBtn?.addEventListener("click", () => exitEditMode(true));
+
+  saveBtn?.addEventListener("click", () => {
+    const story = {};
+    chapters.forEach((item) => {
+      const textarea = item.querySelector(".story-textarea");
+      story[item.dataset.chapter] = (textarea?.value || "").trim();
+    });
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Saving…";
+
+    saveManifest(MANIFEST_ID, story)
+      .then(() => exitEditMode(false))
+      .catch(() => alert("Couldn't save your story — check your connection and try again."))
+      .finally(() => {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Save story";
+      });
+  });
+
+  loadManifest(MANIFEST_ID, {}).then(applyStory);
+});
+
 /* Typewriter effect for the message page */
 document.addEventListener("DOMContentLoaded", () => {
   const el = document.getElementById("typewriter");
