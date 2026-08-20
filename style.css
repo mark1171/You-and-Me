@@ -342,12 +342,72 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
 }
 
 /* ===== Memories grid ===== */
+.memories-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 2.2rem;
+  margin-top: 2.5rem;
+}
+
+.memories-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  flex-shrink: 0;
+  width: 128px;
+  position: sticky;
+  top: 1.5rem;
+}
+
+.filter-btn {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  padding: 0.55rem 1rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.filter-btn:hover {
+  color: var(--text-main);
+  border-color: var(--violet-soft);
+}
+
+.filter-btn.active {
+  color: var(--text-main);
+  background: linear-gradient(135deg, rgba(79, 124, 255, 0.35), rgba(139, 92, 246, 0.35));
+  border-color: var(--violet-soft);
+}
+
 .memories-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 140px));
   justify-content: center;
   gap: 1.1rem;
-  margin-top: 2.5rem;
+  flex: 1;
+}
+
+@media (max-width: 720px) {
+  .memories-layout {
+    flex-direction: column;
+  }
+
+  .memories-filters {
+    flex-direction: row;
+    width: 100%;
+    overflow-x: auto;
+    position: static;
+    padding-bottom: 0.3rem;
+  }
+
+  .filter-btn {
+    white-space: nowrap;
+  }
 }
 
 .memory-card {
