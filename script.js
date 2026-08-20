@@ -136,15 +136,19 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /* Memories page: upload photos to Cloudinary, keep the list of them
-   (with captions) in a small JSON manifest also stored on Cloudinary —
-   so the whole thing works with just one service, synced everywhere. */
+   (with captions + who they're of) in a small JSON manifest on
+   jsonbin.io — so the whole thing works with just two free services,
+   synced everywhere. A sidebar of filter buttons (All/Mark/Monica/Us)
+   narrows which photos are shown. */
 document.addEventListener("DOMContentLoaded", () => {
   const grid = document.getElementById("memories-grid");
   if (!grid) return;
 
   const addBtn = document.getElementById("add-memory-btn");
   const fileInput = document.getElementById("memory-file-input");
+  const filterBtns = document.querySelectorAll(".filter-btn");
   const MANIFEST_ID = window.JSONBIN_MEMORIES_ID;
+  const CATEGORIES = ["mark", "monica", "us"];
 
   const grads = [
     "linear-gradient(155deg, #4f7cff, #8b5cf6)",
@@ -152,10 +156,24 @@ document.addEventListener("DOMContentLoaded", () => {
     "linear-gradient(155deg, #3a5fe0, #7c4fd4)",
   ];
 
-  const render = (memories) => {
+  let allMemories = [];
+  let activeFilter = "all";
+
+  const askCategory = () => {
+    const raw = (window.prompt("Whose memory is this — mark, monica, or us?", "us") || "us")
+      .trim()
+      .toLowerCase();
+    return CATEGORIES.includes(raw) ? raw : "us";
+  };
+
+  const render = () => {
     grid.querySelectorAll(".memory-card:not(.memory-add)").forEach((el) => el.remove());
 
-    memories.forEach((memory, i) => {
+    const visible = activeFilter === "all"
+      ? allMemories
+      : allMemories.filter((m) => m.category === activeFilter);
+
+    visible.forEach((memory, i) => {
       const card = document.createElement("div");
       card.className = "memory-card has-photo";
       card.style.backgroundImage = `url(${optimizedUrl(memory.src, 400)})`;
@@ -174,9 +192,12 @@ document.addEventListener("DOMContentLoaded", () => {
       del.addEventListener("click", (e) => {
         e.stopPropagation();
         loadManifest(MANIFEST_ID, []).then((current) => {
-          const updated = current.filter((_, idx) => idx !== i);
+          const updated = current.filter((m) => m.src !== memory.src);
           saveManifest(MANIFEST_ID, updated)
-            .then(() => render(updated))
+            .then(() => {
+              allMemories = updated;
+              render();
+            })
             .catch(() => alert("Couldn't remove that memory — check your connection and try again."));
         });
       });
@@ -190,6 +211,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
 
+  filterBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      activeFilter = btn.dataset.filter;
+      filterBtns.forEach((b) => {
+        b.classList.toggle("active", b === btn);
+        b.setAttribute("aria-selected", String(b === btn));
+      });
+      render();
+    });
+  });
+
   addBtn?.addEventListener("click", () => fileInput.click());
 
   fileInput?.addEventListener("change", () => {
@@ -199,9 +231,13 @@ document.addEventListener("DOMContentLoaded", () => {
     uploadToCloudinary(file)
       .then((url) => {
         const caption = window.prompt("Add a short caption for this memory (optional):", "") || "";
+        const category = askCategory();
         return loadManifest(MANIFEST_ID, []).then((current) => {
-          const updated = [...current, { src: url, caption }];
-          return saveManifest(MANIFEST_ID, updated).then(() => render(updated));
+          const updated = [...current, { src: url, caption, category }];
+          return saveManifest(MANIFEST_ID, updated).then(() => {
+            allMemories = updated;
+            render();
+          });
         });
       })
       .then(() => {
@@ -214,7 +250,10 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   });
 
-  loadManifest(MANIFEST_ID, []).then(render);
+  loadManifest(MANIFEST_ID, []).then((memories) => {
+    allMemories = memories;
+    render();
+  });
 });
 
 /* 3D rotating carousel (gallery page) — continuous auto-rotate,
