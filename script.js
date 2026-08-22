@@ -28,31 +28,6 @@ function uploadToCloudinary(file, publicId) {
   }).then((data) => data.secure_url);
 }
 
-/* Same idea as uploadToCloudinary, but for audio files. Cloudinary
-   treats audio as a "video" resource type under the hood, so it needs
-   its own endpoint. */
-function uploadAudioToCloudinary(file, publicId) {
-  const cloudName = window.CLOUDINARY_CLOUD_NAME;
-  const uploadPreset = window.CLOUDINARY_UPLOAD_PRESET;
-
-  if (!cloudName || cloudName.startsWith("PASTE_")) {
-    return Promise.reject(new Error("Cloudinary isn't configured yet — check cloudinary-config.js"));
-  }
-
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", uploadPreset);
-  if (publicId) formData.append("public_id", publicId);
-
-  return fetch(`https://api.cloudinary.com/v1_1/${cloudName}/video/upload`, {
-    method: "POST",
-    body: formData,
-  }).then((res) => {
-    if (!res.ok) throw new Error("Cloudinary upload failed");
-    return res.json();
-  }).then((data) => data.secure_url);
-}
-
 /* Ask Cloudinary to deliver a resized, auto-optimized version of an
    image instead of the full original — faster loading, same URL host. */
 function optimizedUrl(url, width = 500) {
@@ -625,88 +600,5 @@ document.addEventListener("DOMContentLoaded", () => {
         saveBtn.disabled = false;
         saveBtn.textContent = "Save letter";
       });
-  });
-});
-
-/* Gallery page: one shared background track. Uploaded once (to
-   Cloudinary, like photos), its URL is saved in a jsonbin bin so
-   whoever visits the Gallery page can play the same song. Playback
-   itself is per-device — browsers won't autoplay audio with sound
-   until someone taps play, so it starts paused for everyone. */
-document.addEventListener("DOMContentLoaded", () => {
-  const bar = document.getElementById("music-bar");
-  if (!bar) return;
-
-  const MUSIC_ID = window.JSONBIN_MUSIC_ID;
-  const addBtn = document.getElementById("add-music-btn");
-  const fileInput = document.getElementById("music-file-input");
-  const nowPlaying = document.getElementById("now-playing");
-  const playPauseBtn = document.getElementById("play-pause-btn");
-  const trackName = document.getElementById("track-name");
-  const removeBtn = document.getElementById("remove-music-btn");
-  const audio = document.getElementById("bg-audio");
-
-  const showTrack = (track) => {
-    audio.src = track.url;
-    trackName.textContent = track.name || "Our song";
-    nowPlaying.hidden = false;
-    addBtn.hidden = true;
-    playPauseBtn.textContent = "▶";
-    playPauseBtn.setAttribute("aria-label", "Play");
-  };
-
-  const showEmpty = () => {
-    audio.pause();
-    audio.removeAttribute("src");
-    nowPlaying.hidden = true;
-    addBtn.hidden = false;
-  };
-
-  loadManifest(MUSIC_ID, null).then((track) => {
-    if (track && track.url) showTrack(track);
-    else showEmpty();
-  });
-
-  addBtn?.addEventListener("click", () => fileInput.click());
-
-  fileInput?.addEventListener("change", () => {
-    const file = fileInput.files?.[0];
-    if (!file) return;
-
-    addBtn.disabled = true;
-    addBtn.textContent = "Uploading…";
-
-    uploadAudioToCloudinary(file, "you-and-me-gallery-track-" + Date.now())
-      .then((url) => {
-        const track = { url, name: file.name.replace(/\.[^/.]+$/, "") };
-        return saveManifest(MUSIC_ID, track).then(() => showTrack(track));
-      })
-      .catch((err) => {
-        console.error(err);
-        alert("Sorry, that track couldn't be saved. Please check your connection and try again.");
-      })
-      .finally(() => {
-        addBtn.disabled = false;
-        addBtn.textContent = "+ Add background music";
-        fileInput.value = "";
-      });
-  });
-
-  playPauseBtn?.addEventListener("click", () => {
-    if (audio.paused) {
-      audio.play();
-      playPauseBtn.textContent = "❚❚";
-      playPauseBtn.setAttribute("aria-label", "Pause");
-    } else {
-      audio.pause();
-      playPauseBtn.textContent = "▶";
-      playPauseBtn.setAttribute("aria-label", "Play");
-    }
-  });
-
-  removeBtn?.addEventListener("click", () => {
-    saveManifest(MUSIC_ID, {})
-      .then(() => showEmpty())
-      .catch(() => alert("Couldn't remove the track — check your connection and try again."));
   });
 });
