@@ -738,6 +738,7 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   background: var(--card-bg);
   padding: 0.5rem 0.6rem 0.5rem 0.5rem;
   position: relative;
+  max-width: 100%;
 }
 
 .play-btn {
@@ -753,6 +754,7 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   align-items: center;
   justify-content: center;
   transition: transform 0.2s ease;
+  flex-shrink: 0;
 }
 
 .play-btn:hover { transform: scale(1.06); }
@@ -765,17 +767,34 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
+/* Self-contained on purpose (doesn't share a class with .letter-remove)
+   so its layout never depends on stylesheet order relative to another
+   rule — that's what was pulling it out of the flex row and stacking
+   it on top of the play button before. */
 .music-remove {
   position: static;
-  width: 24px;
-  height: 24px;
-  font-size: 0.8rem;
-  opacity: 0.7;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(10, 8, 40, 0.55);
+  color: #fff;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s ease;
 }
 
-.music-remove:hover { opacity: 1; }
+.music-remove:hover { background: rgba(139, 92, 246, 0.7); }
+
+@media (max-width: 480px) {
+  .track-name { max-width: 130px; }
+}
 
 /* ===== Message page ===== */
 .letter {
