@@ -397,6 +397,7 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
 @media (max-width: 900px) {
   .memories-layout {
     flex-direction: column;
+    align-items: stretch;
   }
 
   .memories-filters {
@@ -410,12 +411,17 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   .filter-btn {
     white-space: nowrap;
   }
+
+  .memories-grid {
+    width: 100%;
+  }
 }
 
 @media (max-width: 600px) {
   .memories-grid {
-    grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
     gap: 0.8rem;
+    width: 100%;
   }
 
   .memories-grid .memory-card {
