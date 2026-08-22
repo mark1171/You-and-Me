@@ -117,7 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
 document.addEventListener("DOMContentLoaded", () => {
   const field = document.getElementById("particle-field");
   if (!field) return;
-  const colors = ["#4f7cff", "#8b5cf6", "#6d28d9"];
+  const colors = ["#4f7cff", "#8b5cf6", "#c4b5fd"];
   const count = 34;
   for (let i = 0; i < count; i++) {
     const p = document.createElement("div");
@@ -433,110 +433,172 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-/* Our Story page — "Edit our story" turns each chapter's paragraph
-   into a textarea; "Save story" writes the text to a small JSON
-   manifest on jsonbin.io so it shows up the same on every device. */
+/* Message page: a growing list of letters, newest first. Stored in a
+   jsonbin.io bin (like Our Story) so every letter you add shows up on
+   any device. The newest letter gets the typewriter effect; older ones
+   are collapsed and expand on click. */
 document.addEventListener("DOMContentLoaded", () => {
-  const timeline = document.getElementById("story-timeline");
-  if (!timeline) return;
+  const list = document.getElementById("letters-list");
+  if (!list) return;
 
-  const editBtn = document.getElementById("edit-story-btn");
-  const actions = document.getElementById("story-actions");
-  const saveBtn = document.getElementById("save-story-btn");
-  const cancelBtn = document.getElementById("cancel-story-btn");
-  const MANIFEST_ID = window.JSONBIN_STORY_ID;
+  const LETTERS_ID = window.JSONBIN_LETTERS_ID;
+  const addBtn = document.getElementById("add-letter-btn");
+  const form = document.getElementById("letter-form");
+  const textarea = document.getElementById("letter-textarea");
+  const saveBtn = document.getElementById("save-letter-btn");
+  const cancelBtn = document.getElementById("cancel-letter-btn");
 
-  const chapters = Array.from(timeline.querySelectorAll(".timeline-item"));
-  let originalTexts = {};
-  let editing = false;
+  const fallbackText = list.dataset.fallback || "";
+  const fallbackDate = list.dataset.fallbackDate || "";
 
-  const applyStory = (story) => {
-    chapters.forEach((item) => {
-      const key = item.dataset.chapter;
-      const p = item.querySelector(".story-text");
-      if (story[key]) p.textContent = story[key];
-    });
+  const typeInto = (el, message) => {
+    el.textContent = "";
+    const caret = document.createElement("span");
+    caret.className = "caret";
+    let i = 0;
+    const step = () => {
+      if (i < message.length) {
+        el.textContent = message.slice(0, i + 1);
+        el.appendChild(caret);
+        i++;
+        setTimeout(step, 22);
+      } else {
+        caret.remove();
+      }
+    };
+    step();
   };
 
-  const enterEditMode = () => {
-    editing = true;
-    editBtn.textContent = "Editing…";
-    editBtn.disabled = true;
-    actions.hidden = false;
+  let currentLetters = [];
 
-    chapters.forEach((item) => {
-      const p = item.querySelector(".story-text");
-      originalTexts[item.dataset.chapter] = p.textContent;
-
-      const textarea = document.createElement("textarea");
-      textarea.className = "story-textarea";
-      textarea.value = p.textContent.trim();
-      textarea.rows = 4;
-      p.replaceWith(textarea);
-    });
+  const deleteLetter = (letter) => {
+    const updated = currentLetters.filter((l) => l !== letter);
+    saveManifest(LETTERS_ID, updated)
+      .then(() => {
+        currentLetters = updated;
+        render(currentLetters);
+      })
+      .catch(() => {
+        alert("Couldn't remove that letter — check your connection and try again.");
+      });
   };
 
-  const exitEditMode = (restore) => {
-    editing = false;
-    editBtn.textContent = "Edit our story";
-    editBtn.disabled = false;
-    actions.hidden = true;
+  const render = (letters) => {
+    list.innerHTML = "";
 
-    chapters.forEach((item) => {
-      const textarea = item.querySelector(".story-textarea");
-      if (!textarea) return;
-      const p = document.createElement("p");
-      p.className = "story-text";
-      p.textContent = restore ? originalTexts[item.dataset.chapter] : textarea.value.trim();
-      textarea.replaceWith(p);
-    });
+    if (letters.length === 0) {
+      letters = [{ text: fallbackText, date: fallbackDate }];
+    }
+
+    // Newest first — the array is stored oldest-to-newest, so reverse it.
+    const ordered = [...letters].reverse();
+
+    const makeCard = (letter, useTypewriter) => {
+      const card = document.createElement("div");
+      card.className = "letter";
+
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "letter-remove";
+      delBtn.setAttribute("aria-label", "Remove this letter");
+      delBtn.textContent = "×";
+      delBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        deleteLetter(letter);
+      });
+      card.appendChild(delBtn);
+
+      const body = document.createElement("div");
+      body.className = "letter-body";
+      if (useTypewriter) {
+        typeInto(body, letter.text);
+      } else {
+        body.textContent = letter.text;
+      }
+      card.appendChild(body);
+
+      const sig = document.createElement("div");
+      sig.className = "signature";
+      sig.textContent = letter.date ? `— always, me · ${letter.date}` : "— always, me";
+      card.appendChild(sig);
+
+      return card;
+    };
+
+    // Newest letter is always visible right away.
+    list.appendChild(makeCard(ordered[0], true));
+
+    const older = ordered.slice(1);
+    if (older.length > 0) {
+      const toggleBtn = document.createElement("button");
+      toggleBtn.type = "button";
+      toggleBtn.className = "btn btn-ghost older-letters-toggle";
+      toggleBtn.textContent = `Show ${older.length} older letter${older.length > 1 ? "s" : ""}`;
+
+      const olderWrap = document.createElement("div");
+      olderWrap.className = "older-letters";
+      olderWrap.hidden = true;
+      older.forEach((letter) => olderWrap.appendChild(makeCard(letter, false)));
+
+      toggleBtn.addEventListener("click", () => {
+        const nowHidden = !olderWrap.hidden;
+        olderWrap.hidden = nowHidden;
+        toggleBtn.textContent = nowHidden
+          ? `Show ${older.length} older letter${older.length > 1 ? "s" : ""}`
+          : "Hide older letters";
+      });
+
+      list.appendChild(toggleBtn);
+      list.appendChild(olderWrap);
+    }
   };
 
-  editBtn?.addEventListener("click", () => {
-    if (!editing) enterEditMode();
+  loadManifest(LETTERS_ID, []).then((letters) => {
+    currentLetters = letters;
+    render(currentLetters);
   });
 
-  cancelBtn?.addEventListener("click", () => exitEditMode(true));
+  addBtn?.addEventListener("click", () => {
+    form.hidden = false;
+    addBtn.hidden = true;
+    textarea.focus();
+  });
+
+  cancelBtn?.addEventListener("click", () => {
+    form.hidden = true;
+    addBtn.hidden = false;
+    textarea.value = "";
+  });
 
   saveBtn?.addEventListener("click", () => {
-    const story = {};
-    chapters.forEach((item) => {
-      const textarea = item.querySelector(".story-textarea");
-      story[item.dataset.chapter] = (textarea?.value || "").trim();
+    const text = textarea.value.trim();
+    if (!text) return;
+
+    const date = new Date().toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
 
     saveBtn.disabled = true;
     saveBtn.textContent = "Saving…";
 
-    saveManifest(MANIFEST_ID, story)
-      .then(() => exitEditMode(false))
-      .catch(() => alert("Couldn't save your story — check your connection and try again."))
+    const updated = [...currentLetters, { text, date }];
+
+    saveManifest(LETTERS_ID, updated)
+      .then(() => {
+        currentLetters = updated;
+        render(currentLetters);
+        textarea.value = "";
+        form.hidden = true;
+        addBtn.hidden = false;
+      })
+      .catch(() => {
+        alert("Sorry, that letter couldn't be saved. Please check your connection and try again.");
+      })
       .finally(() => {
         saveBtn.disabled = false;
-        saveBtn.textContent = "Save story";
+        saveBtn.textContent = "Save letter";
       });
   });
-
-  loadManifest(MANIFEST_ID, {}).then(applyStory);
-});
-
-/* Typewriter effect for the message page */
-document.addEventListener("DOMContentLoaded", () => {
-  const el = document.getElementById("typewriter");
-  if (!el) return;
-  const message = el.dataset.message || "";
-  el.textContent = "";
-  const caret = document.createElement("span");
-  caret.className = "caret";
-  let i = 0;
-
-  const type = () => {
-    if (i < message.length) {
-      el.textContent = message.slice(0, i + 1);
-      el.appendChild(caret);
-      i++;
-      setTimeout(type, 22);
-    }
-  };
-  type();
 });
