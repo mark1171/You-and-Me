@@ -16,7 +16,7 @@
 
 * { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overflow-x: hidden; }
 
 body {
   margin: 0;
@@ -593,6 +593,29 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
 .carousel-item:hover {
   --hover-scale: 1.35;
   box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
+}
+
+/* Only zoom on tap/hover for devices with a real mouse. On touch
+   screens :hover "sticks" after a tap (there's no mouse to move away),
+   which is what made photos look stuck at a bigger size — and the
+   zoomed card poking past the screen edge is also what let you drag
+   the page sideways. */
+@media (hover: none) {
+  .carousel-item:hover {
+    --hover-scale: 1;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  }
+}
+
+@media (max-width: 480px) {
+  .carousel-stage {
+    height: 300px;
+  }
+
+  .carousel-container {
+    width: 170px;
+    height: 230px;
+  }
 }
 
 .carousel-item .item-label {
