@@ -3,3 +3,4 @@ window.JSONBIN_GALLERY_ID = "6a847bffda38895dfef359d0";
 window.JSONBIN_API_KEY = "$2a$10$FmttjHCwJjWmdpypD5r.R.0UFlexHIETqnK73/j2huwbusuNHeZpK";
 window.JSONBIN_STORY_ID = "6a871e38da38895dfefbe982";
 window.JSONBIN_LETTERS_ID = "6a872485da38895dfefbfc97";
+window.JSONBIN_MUSIC_ID = "6a8983a2da38895dfe0352fa";
