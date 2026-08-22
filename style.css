@@ -910,6 +910,14 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   margin-top: 1.4rem;
 }
 
+/* A class-based display rule like the one above silently overrides the
+   browser's default [hidden] behavior at equal specificity — so setting
+   .hidden = true in JS stopped actually hiding anything. This wins back
+   that specificity so the toggle button visibly does something again. */
+.older-letters[hidden] {
+  display: none;
+}
+
 .older-letters .letter {
   margin-top: 0;
 }
