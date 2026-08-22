@@ -705,8 +705,15 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   removeBtn?.addEventListener("click", () => {
-    saveManifest(MUSIC_ID, {})
+    // jsonbin can reject a bare empty object ({}) as invalid content,
+    // which was silently turning "remove" into a no-op. Sending a real
+    // (but empty-valued) shape keeps the same "no track saved" meaning
+    // while staying a valid bin payload.
+    saveManifest(MUSIC_ID, { url: "", name: "" })
       .then(() => showEmpty())
-      .catch(() => alert("Couldn't remove the track — check your connection and try again."));
+      .catch((err) => {
+        console.error(err);
+        alert("Couldn't remove the track — check your connection and try again.");
+      });
   });
 });
