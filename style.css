@@ -1,15 +1,15 @@
 /* ===== Tokens ===== */
 :root {
-  --bg-deep: #d2d6ef;
-  --bg-mid: #e6e9fa;
+  --bg-deep: #1a1454;
+  --bg-mid: #2a1f72;
   --violet: #8b5cf6;
-  --violet-soft: #a78bfa;
+  --violet-soft: #c4b5fd;
   --blue: #4f7cff;
-  --blue-soft: #3f66df;
-  --text-main: #2f2b63;
-  --text-dim: #5f5a92;
-  --card-bg: rgba(255, 255, 255, 0.55);
-  --card-border: rgba(139, 92, 246, 0.25);
+  --blue-soft: #93b4ff;
+  --text-main: #f2f0ff;
+  --text-dim: #b6b0e8;
+  --card-bg: rgba(255, 255, 255, 0.06);
+  --card-border: rgba(196, 181, 253, 0.24);
   --font-display: "Cormorant Garamond", serif;
   --font-body: "Poppins", sans-serif;
 }
@@ -22,11 +22,9 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(ellipse 60% 42% at 18% 0%, rgba(129, 164, 244, 0.55) 0%, transparent 62%),
-    radial-gradient(ellipse 55% 45% at 88% 12%, rgba(196, 165, 245, 0.5) 0%, transparent 62%),
-    radial-gradient(ellipse 60% 45% at 8% 88%, rgba(151, 224, 209, 0.4) 0%, transparent 60%),
-    radial-gradient(ellipse 55% 45% at 92% 96%, rgba(167, 139, 250, 0.4) 0%, transparent 62%),
-    linear-gradient(170deg, #eef1fc 0%, var(--bg-mid) 40%, var(--bg-deep) 75%, #cdd1ec 100%);
+    radial-gradient(circle at 15% -10%, rgba(139, 92, 246, 0.55) 0%, transparent 55%),
+    radial-gradient(circle at 100% 10%, rgba(79, 124, 255, 0.45) 0%, transparent 50%),
+    linear-gradient(160deg, var(--bg-mid) 0%, var(--bg-deep) 55%, #100c3d 100%);
   background-attachment: fixed;
   color: var(--text-main);
   font-family: var(--font-body);
@@ -49,11 +47,11 @@ nav {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.85rem clamp(1.1rem, 4vw, 2.4rem);
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(10, 8, 40, 0.55);
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
   border-bottom: 1px solid var(--card-border);
-  box-shadow: 0 8px 30px rgba(90, 80, 160, 0.15);
+  box-shadow: 0 8px 30px rgba(6, 4, 30, 0.25);
 }
 
 .nav-brand {
@@ -101,7 +99,7 @@ nav {
   height: 38px;
   border-radius: 10px;
   border: 1px solid var(--card-border);
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.04);
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -156,7 +154,7 @@ nav a.active {
     align-items: stretch;
     gap: 0.3rem;
     padding: 0.8rem 1rem 1.1rem;
-    background: rgba(255, 255, 255, 0.92);
+    background: rgba(10, 8, 40, 0.92);
     backdrop-filter: blur(18px);
     border-bottom: 1px solid var(--card-border);
     max-height: 0;
@@ -366,7 +364,7 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   font-size: 0.8rem;
   letter-spacing: 0.05em;
   color: var(--text-dim);
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--card-border);
   border-radius: 999px;
   padding: 0.55rem 1rem;
@@ -394,7 +392,7 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   flex: 1;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 720px) {
   .memories-layout {
     flex-direction: column;
   }
@@ -409,17 +407,6 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
 
   .filter-btn {
     white-space: nowrap;
-  }
-}
-
-@media (max-width: 600px) {
-  .memories-grid {
-    grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
-    gap: 0.8rem;
-  }
-
-  .memories-grid .memory-card {
-    max-width: none;
   }
 }
 
@@ -501,7 +488,7 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   border-radius: 50%;
   border: none;
   background: rgba(10, 8, 40, 0.55);
-  color: #fff;
+  color: var(--text-main);
   font-size: 0.9rem;
   line-height: 1;
   cursor: pointer;
@@ -523,7 +510,7 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   align-items: center;
   justify-content: center;
   border-style: dashed;
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.02);
   transition: border-color 0.25s ease, color 0.25s ease, background 0.25s ease;
 }
 
@@ -615,7 +602,7 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   font-size: 0.68rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #fff;
+  color: var(--text-main);
   background: rgba(10, 8, 40, 0.5);
   opacity: 0;
   transition: opacity 0.2s ease;
@@ -636,7 +623,7 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   border-radius: 50%;
   border: none;
   background: rgba(10, 8, 40, 0.6);
-  color: #fff;
+  color: var(--text-main);
   font-size: 0.85rem;
   line-height: 1;
   cursor: pointer;
@@ -670,16 +657,15 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   height: 42px;
   border-radius: 50%;
   border: 1px solid var(--card-border);
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255,255,255,0.04);
   color: var(--text-main);
   font-size: 1.1rem;
   cursor: pointer;
-  transition: background 0.25s ease, transform 0.25s ease, color 0.25s ease;
+  transition: background 0.25s ease, transform 0.25s ease;
 }
 
 .carousel-controls button:hover {
   background: linear-gradient(120deg, var(--blue), var(--violet));
-  color: #fff;
   transform: translateY(-2px);
 }
 
@@ -704,7 +690,7 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   padding: 0.45rem 0.5rem;
   border-radius: 10px;
   border: 1px solid var(--card-border);
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--text-main);
   font-family: var(--font-body);
   font-size: 0.85rem;
@@ -722,6 +708,43 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
 }
 
 /* ===== Message page ===== */
+.letters-toolbar {
+  margin-top: 1.5rem;
+}
+
+.letter-form {
+  margin-top: 1.5rem;
+  border-radius: 22px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  padding: clamp(1.4rem, 4vw, 2rem);
+}
+
+.story-textarea {
+  width: 100%;
+  min-height: 10em;
+  resize: vertical;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text-main);
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+}
+
+.story-textarea:focus {
+  outline: none;
+  border-color: var(--violet-soft);
+}
+
+.letter-form-actions {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
 .letter {
   margin-top: 2rem;
   border-radius: 22px;
@@ -740,13 +763,48 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   background: linear-gradient(90deg, var(--blue), var(--violet));
 }
 
-#typewriter {
+.letter-body {
   font-family: var(--font-display);
   font-size: clamp(1.1rem, 2.4vw, 1.5rem);
   color: var(--text-main);
   line-height: 1.7;
   min-height: 8em;
   white-space: pre-wrap;
+}
+
+.older-letters-toggle {
+  margin-top: 1.6rem;
+}
+
+.older-letters {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  margin-top: 1.4rem;
+}
+
+.older-letters .letter {
+  margin-top: 0;
+}
+
+.letter-remove {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(10, 8, 40, 0.55);
+  color: var(--text-main);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.letter-remove:hover {
+  background: rgba(139, 92, 246, 0.7);
 }
 
 .caret {
@@ -802,37 +860,6 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   letter-spacing: 0.1em;
   display: block;
   margin-bottom: 0.3rem;
-}
-
-.story-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 1.5rem;
-}
-
-.story-textarea {
-  width: 100%;
-  min-height: 6rem;
-  padding: 0.8rem 1rem;
-  border-radius: 12px;
-  border: 1px solid var(--card-border);
-  background: rgba(255, 255, 255, 0.55);
-  color: var(--text-main);
-  font-family: var(--font-body);
-  font-size: 0.95rem;
-  line-height: 1.6;
-  resize: vertical;
-}
-
-.story-textarea:focus {
-  outline: none;
-  border-color: var(--violet-soft);
-}
-
-.story-actions {
-  display: flex;
-  gap: 0.8rem;
-  margin-top: 1.8rem;
 }
 
 /* ===== Footer ===== */
