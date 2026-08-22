@@ -720,3 +720,92 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   });
 });
+
+/* Our Story page: "Edit our story" turns each chapter's paragraph into
+   an editable textarea. Save writes all four chapters to a jsonbin.io
+   bin (same pattern as the other pages) so the story is the same on
+   every device; Cancel discards any changes and restores the text that
+   was there before you started editing. */
+document.addEventListener("DOMContentLoaded", () => {
+  const timeline = document.getElementById("story-timeline");
+  if (!timeline) return;
+
+  const STORY_ID = window.JSONBIN_STORY_ID;
+  const editBtn = document.getElementById("edit-story-btn");
+  const actions = document.getElementById("story-actions");
+  const saveBtn = document.getElementById("save-story-btn");
+  const cancelBtn = document.getElementById("cancel-story-btn");
+  const items = Array.from(timeline.querySelectorAll(".timeline-item"));
+
+  let savedText = {};
+
+  const applyStory = (story) => {
+    items.forEach((item) => {
+      const chapter = item.dataset.chapter;
+      const el = item.querySelector(".story-text");
+      if (story && typeof story[chapter] === "string") {
+        savedText[chapter] = story[chapter];
+        el.textContent = story[chapter];
+      } else {
+        savedText[chapter] = el.textContent;
+      }
+    });
+  };
+
+  const enterEditMode = () => {
+    items.forEach((item) => {
+      const p = item.querySelector(".story-text");
+      const textarea = document.createElement("textarea");
+      textarea.className = "story-textarea";
+      textarea.rows = 3;
+      textarea.value = savedText[item.dataset.chapter] ?? p.textContent;
+      p.replaceWith(textarea);
+    });
+    editBtn.hidden = true;
+    actions.hidden = false;
+  };
+
+  const exitEditMode = (newText) => {
+    items.forEach((item) => {
+      const chapter = item.dataset.chapter;
+      const textarea = item.querySelector("textarea.story-textarea");
+      const text = newText ? (newText[chapter] ?? savedText[chapter]) : savedText[chapter];
+      const p = document.createElement("p");
+      p.className = "story-text";
+      p.textContent = text;
+      textarea.replaceWith(p);
+    });
+    editBtn.hidden = false;
+    actions.hidden = true;
+  };
+
+  editBtn?.addEventListener("click", enterEditMode);
+
+  cancelBtn?.addEventListener("click", () => exitEditMode());
+
+  saveBtn?.addEventListener("click", () => {
+    const updated = {};
+    items.forEach((item) => {
+      const textarea = item.querySelector("textarea.story-textarea");
+      updated[item.dataset.chapter] = textarea.value.trim();
+    });
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Saving…";
+
+    saveManifest(STORY_ID, updated)
+      .then(() => {
+        savedText = { ...savedText, ...updated };
+        exitEditMode(updated);
+      })
+      .catch(() => {
+        alert("Sorry, your story couldn't be saved. Please check your connection and try again.");
+      })
+      .finally(() => {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Save story";
+      });
+  });
+
+  loadManifest(STORY_ID, {}).then(applyStory);
+});
