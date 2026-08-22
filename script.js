@@ -497,6 +497,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentLetters = [];
 
   const deleteLetter = (letter) => {
+    const confirmed = window.confirm("Delete this letter? This can't be undone.");
+    if (!confirmed) return;
+
     const updated = currentLetters.filter((l) => l !== letter);
     saveManifest(LETTERS_ID, updated)
       .then(() => {
