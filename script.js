@@ -146,7 +146,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const addBtn = document.getElementById("add-memory-btn");
   const fileInput = document.getElementById("memory-file-input");
-  const filterBtns = document.querySelectorAll(".filter-btn");
+  const filterBtns = document.querySelectorAll(".filter-btn[data-filter]");
+  const sortBtns = document.querySelectorAll(".sort-btn[data-sort]");
   const MANIFEST_ID = window.JSONBIN_MEMORIES_ID;
   const CATEGORIES = ["mark", "monica", "us"];
 
@@ -158,6 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let allMemories = [];
   let activeFilter = "all";
+  let sortOrder = "newest";
   let editingSrc = null;
 
   const modal = document.getElementById("memory-modal");
@@ -230,9 +232,27 @@ document.addEventListener("DOMContentLoaded", () => {
   const render = () => {
     grid.querySelectorAll(".memory-card:not(.memory-add)").forEach((el) => el.remove());
 
-    const visible = activeFilter === "all"
+    const filtered = activeFilter === "all"
       ? allMemories
       : allMemories.filter((m) => m.category === activeFilter);
+
+    // Sort by the date typed into each photo's edit modal. Photos with
+    // no date set always sink to the end, in either sort direction,
+    // instead of jumping around unpredictably.
+    const dateValue = (m) => {
+      if (!m.date) return null;
+      const t = new Date(`${m.date}T00:00:00`).getTime();
+      return Number.isNaN(t) ? null : t;
+    };
+
+    const visible = [...filtered].sort((a, b) => {
+      const aTime = dateValue(a);
+      const bTime = dateValue(b);
+      if (aTime === null && bTime === null) return 0;
+      if (aTime === null) return 1;
+      if (bTime === null) return -1;
+      return sortOrder === "newest" ? bTime - aTime : aTime - bTime;
+    });
 
     visible.forEach((memory, i) => {
       const card = document.createElement("div");
@@ -298,6 +318,14 @@ document.addEventListener("DOMContentLoaded", () => {
         b.classList.toggle("active", b === btn);
         b.setAttribute("aria-selected", String(b === btn));
       });
+      render();
+    });
+  });
+
+  sortBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      sortOrder = btn.dataset.sort;
+      sortBtns.forEach((b) => b.classList.toggle("active", b === btn));
       render();
     });
   });
