@@ -58,13 +58,19 @@
     </div>
 
     <div class="music-bar" id="music-bar">
-      <button class="btn btn-ghost" id="add-music-btn" type="button">+ Add music</button>
+      <div class="music-toolbar">
+        <button class="btn btn-ghost music-trigger" id="music-trigger-btn" type="button">+ Add music</button>
+      </div>
+
       <div class="now-playing" id="now-playing" hidden>
         <button class="play-btn" id="play-pause-btn" type="button" aria-label="Play">&#9658;</button>
-        <span class="track-name" id="track-name"></span>
-        <button class="music-remove" id="remove-music-btn" type="button" aria-label="Remove music">&times;</button>
+        <span class="track-name" id="track-name" title="Click to rename"></span>
+        <input type="range" id="track-seek" class="track-seek" min="0" max="0" step="0.01" value="0" />
       </div>
-      <audio id="bg-audio" preload="none" loop></audio>
+
+      <div class="playlist" id="playlist"></div>
+
+      <audio id="bg-audio" preload="metadata" loop></audio>
     </div>
     <input type="file" id="music-file-input" accept="audio/*" hidden />
   </section>
