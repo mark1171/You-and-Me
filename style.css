@@ -856,8 +856,20 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
 .music-bar {
   margin-top: 2.4rem;
   display: flex;
+  flex-direction: column;
   align-items: center;
+  gap: 1rem;
+}
+
+.music-toolbar {
+  display: flex;
   justify-content: center;
+}
+
+.music-trigger {
+  flex-shrink: 0;
+  padding: 0.5rem 1.1rem;
+  font-size: 0.72rem;
 }
 
 .now-playing {
@@ -894,12 +906,27 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   font-family: var(--font-body);
   font-size: 0.85rem;
   color: var(--text-main);
-  max-width: 220px;
+  max-width: 160px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
   flex-shrink: 1;
+  cursor: pointer;
+  border-bottom: 1px dashed transparent;
+  transition: border-color 0.2s ease;
+}
+
+.track-name:hover {
+  border-bottom-color: var(--violet-soft);
+}
+
+.track-seek {
+  flex: 1;
+  min-width: 70px;
+  max-width: 160px;
+  accent-color: var(--violet);
+  cursor: pointer;
 }
 
 /* Self-contained on purpose (doesn't share a class with .letter-remove)
@@ -923,8 +950,65 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
 
 .music-remove:hover { background: rgba(139, 92, 246, 0.7); }
 
+/* Saved songs — tap one to switch what's playing */
+.playlist {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.playlist-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  border-radius: 14px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  padding: 0.55rem 0.6rem 0.55rem 0.9rem;
+}
+
+.playlist-item.active {
+  border-color: var(--violet-soft);
+  background: rgba(196, 181, 253, 0.1);
+}
+
+.playlist-item-name {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0.2rem 0;
+}
+
+.playlist-item.active .playlist-item-name {
+  color: var(--blue-soft);
+  font-weight: 500;
+}
+
+.playlist-item-name::before {
+  content: "\266A  ";
+  opacity: 0.5;
+}
+
+.playlist-item.active .playlist-item-name::before {
+  content: "\266B  ";
+  opacity: 1;
+}
+
 @media (max-width: 480px) {
-  .track-name { max-width: 130px; }
+  .track-name { max-width: 90px; }
+  .track-seek { max-width: 90px; }
 }
 
 /* ===== Message page ===== */
