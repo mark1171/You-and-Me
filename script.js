@@ -179,6 +179,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const modalContent = modal?.querySelector(".memory-modal-content");
 
+  // Custom delete-confirm dialog — used instead of window.confirm(),
+  // which can get silently blocked inside in-app browsers (Facebook/
+  // Instagram/Messenger link previews) and never show anything.
+  const confirmModal = document.getElementById("delete-confirm-modal");
+  const confirmBackdrop = document.getElementById("delete-confirm-backdrop");
+  const confirmYes = document.getElementById("delete-confirm-yes");
+  const confirmNo = document.getElementById("delete-confirm-no");
+  let confirmResolve = null;
+
+  const askDeleteConfirm = () => {
+    if (!confirmModal) return Promise.resolve(true);
+    confirmModal.hidden = false;
+    document.body.style.overflow = "hidden";
+    return new Promise((resolve) => {
+      confirmResolve = resolve;
+    });
+  };
+
+  const closeDeleteConfirm = (result) => {
+    if (!confirmModal) return;
+    confirmModal.hidden = true;
+    document.body.style.overflow = "";
+    if (confirmResolve) {
+      confirmResolve(result);
+      confirmResolve = null;
+    }
+  };
+
+  confirmYes?.addEventListener("click", () => closeDeleteConfirm(true));
+  confirmNo?.addEventListener("click", () => closeDeleteConfirm(false));
+  confirmBackdrop?.addEventListener("click", () => closeDeleteConfirm(false));
+
   const openModal = (memory, sourceEl) => {
     if (!modal) return;
     editingSrc = memory.src;
@@ -315,14 +347,18 @@ document.addEventListener("DOMContentLoaded", () => {
       del.textContent = "×";
       del.addEventListener("click", (e) => {
         e.stopPropagation();
-        loadManifest(MANIFEST_ID, []).then((current) => {
-          const updated = current.filter((m) => m.src !== memory.src);
-          saveManifest(MANIFEST_ID, updated)
-            .then(() => {
-              allMemories = updated;
-              render();
-            })
-            .catch(() => alert("Couldn't remove that memory — check your connection and try again."));
+        askDeleteConfirm().then((confirmed) => {
+          if (!confirmed) return;
+
+          loadManifest(MANIFEST_ID, []).then((current) => {
+            const updated = current.filter((m) => m.src !== memory.src);
+            saveManifest(MANIFEST_ID, updated)
+              .then(() => {
+                allMemories = updated;
+                render();
+              })
+              .catch(() => alert("Couldn't remove that memory — check your connection and try again."));
+          });
         });
       });
       card.appendChild(del);
