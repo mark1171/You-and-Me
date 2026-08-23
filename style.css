@@ -459,7 +459,7 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   position: relative;
   font-size: 0.78rem;
   letter-spacing: 0.08em;
-  color: var(--text-main);
+  color: var(--text-dim);
   text-transform: uppercase;
 }
 
@@ -488,6 +488,7 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   font-size: 0.72rem;
   letter-spacing: 0.03em;
   text-transform: none;
+  color: #fff;
   opacity: 0;
   transform: translateY(4px);
   transition: opacity 0.25s ease, transform 0.25s ease;
