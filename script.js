@@ -162,7 +162,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const modal = document.getElementById("memory-modal");
   const modalBackdrop = document.getElementById("memory-modal-backdrop");
-  const modalClose = document.getElementById("memory-modal-close");
   const modalPhoto = document.getElementById("memory-modal-photo");
   const modalCaption = document.getElementById("memory-modal-caption");
   const modalDate = document.getElementById("memory-modal-date");
@@ -194,7 +193,6 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   modalBackdrop?.addEventListener("click", closeModal);
-  modalClose?.addEventListener("click", closeModal);
   modalCancel?.addEventListener("click", closeModal);
 
   modalSave?.addEventListener("click", () => {
