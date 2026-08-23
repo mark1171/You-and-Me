@@ -520,6 +520,110 @@ document.addEventListener("DOMContentLoaded", () => {
   loadManifest(MANIFEST_ID, {}).then(applyStory);
 });
 
+/* Gallery page — background music. Pick a song, it uploads to
+   Cloudinary (audio goes through Cloudinary's "video" resource type)
+   and the URL + name are saved to a small JSON manifest on
+   jsonbin.io, so the song is still there next time either of you
+   opens the page. */
+document.addEventListener("DOMContentLoaded", () => {
+  const bar = document.getElementById("music-bar");
+  if (!bar) return;
+
+  const MANIFEST_ID = window.JSONBIN_MUSIC_ID;
+  const addBtn = document.getElementById("add-music-btn");
+  const nowPlaying = document.getElementById("now-playing");
+  const playPauseBtn = document.getElementById("play-pause-btn");
+  const trackNameEl = document.getElementById("track-name");
+  const removeBtn = document.getElementById("remove-music-btn");
+  const audio = document.getElementById("bg-audio");
+  const fileInput = document.getElementById("music-file-input");
+
+  const uploadAudioToCloudinary = (file) => {
+    const cloudName = window.CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = window.CLOUDINARY_UPLOAD_PRESET;
+
+    if (!cloudName || cloudName.startsWith("PASTE_")) {
+      return Promise.reject(new Error("Cloudinary isn't configured yet — check cloudinary-config.js"));
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", uploadPreset);
+
+    return fetch(`https://api.cloudinary.com/v1_1/${cloudName}/video/upload`, {
+      method: "POST",
+      body: formData,
+    }).then((res) => {
+      if (!res.ok) throw new Error("Cloudinary upload failed");
+      return res.json();
+    }).then((data) => data.secure_url);
+  };
+
+  const showTrack = (track) => {
+    audio.src = track.url;
+    trackNameEl.textContent = track.name || "Our song";
+    nowPlaying.hidden = false;
+    addBtn.hidden = true;
+    playPauseBtn.textContent = "▶";
+    playPauseBtn.setAttribute("aria-label", "Play");
+  };
+
+  const showEmpty = () => {
+    audio.pause();
+    audio.removeAttribute("src");
+    audio.load();
+    nowPlaying.hidden = true;
+    addBtn.hidden = false;
+  };
+
+  addBtn?.addEventListener("click", () => fileInput.click());
+
+  fileInput?.addEventListener("change", () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+
+    addBtn.disabled = true;
+    addBtn.textContent = "Uploading…";
+
+    uploadAudioToCloudinary(file)
+      .then((url) => {
+        const track = { url, name: file.name.replace(/\.[^/.]+$/, "") };
+        return saveManifest(MANIFEST_ID, track).then(() => showTrack(track));
+      })
+      .catch((err) => {
+        console.error(err);
+        alert("Sorry, that song couldn't be saved. Please check your connection and try again.");
+      })
+      .finally(() => {
+        addBtn.disabled = false;
+        addBtn.textContent = "+ Add music";
+        fileInput.value = "";
+      });
+  });
+
+  playPauseBtn?.addEventListener("click", () => {
+    if (audio.paused) {
+      audio.play();
+      playPauseBtn.textContent = "⏸";
+      playPauseBtn.setAttribute("aria-label", "Pause");
+    } else {
+      audio.pause();
+      playPauseBtn.textContent = "▶";
+      playPauseBtn.setAttribute("aria-label", "Play");
+    }
+  });
+
+  removeBtn?.addEventListener("click", () => {
+    saveManifest(MANIFEST_ID, {})
+      .then(() => showEmpty())
+      .catch(() => alert("Couldn't remove the song — check your connection and try again."));
+  });
+
+  loadManifest(MANIFEST_ID, {}).then((track) => {
+    if (track && track.url) showTrack(track);
+  });
+});
+
 /* Typewriter effect for the message page */
 document.addEventListener("DOMContentLoaded", () => {
   const el = document.getElementById("typewriter");
