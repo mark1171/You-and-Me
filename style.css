@@ -698,6 +698,55 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   line-height: 1;
 }
 
+/* ===== Delete confirm dialog ===== */
+.confirm-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.2rem;
+}
+
+.confirm-modal[hidden] {
+  display: none;
+}
+
+.confirm-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+}
+
+.confirm-modal-content {
+  position: relative;
+  z-index: 1;
+  width: min(340px, 100%);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 22px;
+  box-shadow: 0 30px 70px rgba(20, 16, 50, 0.35);
+  backdrop-filter: blur(20px);
+  padding: 1.6rem;
+  text-align: center;
+  animation: fadeInUp 0.25s ease both;
+}
+
+.confirm-modal-content p {
+  color: var(--text-main);
+  font-size: 0.95rem;
+  margin: 0 0 1.2rem;
+}
+
+.confirm-modal-actions {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: center;
+}
+
 /* ===== Gallery / 3D carousel ===== */
 .carousel-stage {
   perspective: 1400px;
