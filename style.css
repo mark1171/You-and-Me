@@ -401,6 +401,22 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   border-color: var(--violet-soft);
 }
 
+.filter-divider {
+  height: 1px;
+  background: var(--card-border);
+  margin: 0.5rem 0.2rem;
+}
+
+.filter-label {
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding: 0 0.2rem;
+  margin-bottom: -0.15rem;
+}
+
 .memories-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -416,14 +432,27 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
 
   .memories-filters {
     flex-direction: row;
+    flex-wrap: wrap;
     width: 100%;
-    overflow-x: auto;
     position: static;
     padding-bottom: 0.3rem;
   }
 
   .filter-btn {
     white-space: nowrap;
+  }
+
+  .filter-divider {
+    display: none;
+  }
+
+  .filter-label {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    margin-bottom: 0;
+    flex-basis: 100%;
+    order: -1;
   }
 
   .memories-grid {
