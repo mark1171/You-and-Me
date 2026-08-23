@@ -58,24 +58,34 @@
     </div>
 
     <input type="file" id="memory-file-input" accept="image/*" hidden />
+  </section>
 
-    <div class="memory-modal" id="memory-modal" hidden>
-      <div class="memory-modal-backdrop" id="memory-modal-backdrop"></div>
-      <div class="memory-modal-content">
-        <div class="memory-modal-photo" id="memory-modal-photo"></div>
-        <div class="memory-modal-fields">
-          <label for="memory-modal-caption">Caption</label>
-          <input type="text" id="memory-modal-caption" placeholder="Add a caption…" maxlength="80" />
-          <label for="memory-modal-date">Date</label>
-          <input type="date" id="memory-modal-date" />
-          <div class="memory-modal-actions">
-            <button class="btn btn-primary" id="memory-modal-save" type="button">Save</button>
-            <button class="btn btn-ghost" id="memory-modal-cancel" type="button">Cancel</button>
-          </div>
+  <!-- Lives directly under <body> on purpose — NOT inside .content.
+       .content has a fade-in animation, and once it finishes, the
+       animation's final "transform: translateY(0)" sticks around
+       (that's what fill-mode "both" does). Any transform, even an
+       identity one, turns that element into the containing block for
+       any position:fixed descendant — so this popup would end up
+       fixed to .content's box instead of the actual screen, which is
+       why it could appear scrolled out of view on phones. Being a
+       sibling of .content instead of a child keeps it truly
+       viewport-fixed no matter where you've scrolled. -->
+  <div class="memory-modal" id="memory-modal" hidden>
+    <div class="memory-modal-backdrop" id="memory-modal-backdrop"></div>
+    <div class="memory-modal-content">
+      <div class="memory-modal-photo" id="memory-modal-photo"></div>
+      <div class="memory-modal-fields">
+        <label for="memory-modal-caption">Caption</label>
+        <input type="text" id="memory-modal-caption" placeholder="Add a caption…" maxlength="80" />
+        <label for="memory-modal-date">Date</label>
+        <input type="date" id="memory-modal-date" />
+        <div class="memory-modal-actions">
+          <button class="btn btn-primary" id="memory-modal-save" type="button">Save</button>
+          <button class="btn btn-ghost" id="memory-modal-cancel" type="button">Cancel</button>
         </div>
       </div>
     </div>
-  </section>
+  </div>
 
   <footer>made with care, just for you</footer>
 </body>
