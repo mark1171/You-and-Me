@@ -16,6 +16,12 @@
 
 * { box-sizing: border-box; }
 
+/* The hidden attribute should always win, no matter what display
+   value a class rule sets on the same element (author CSS otherwise
+   overrides the browser's default [hidden] behavior, which is what
+   caused the memory-edit modal to stay visible at all times). */
+[hidden] { display: none !important; }
+
 html { scroll-behavior: smooth; overflow-x: hidden; }
 
 body {
@@ -524,18 +530,15 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   line-height: 1;
   cursor: pointer;
   z-index: 2;
-  opacity: 0;
+  opacity: 0.85;
   transition: opacity 0.2s ease, background 0.2s ease;
 }
 
-.memory-card:hover .memory-delete { opacity: 1; }
-.memory-delete:hover { background: rgba(139, 92, 246, 0.7); }
-
-@media (hover: none) {
-  .memory-delete {
-    opacity: 1;
-  }
+.memory-card:hover .memory-delete,
+.memory-delete:hover {
+  opacity: 1;
 }
+.memory-delete:hover { background: rgba(139, 92, 246, 0.7); }
 
 /* ===== Memory edit modal ===== */
 .memory-modal {
