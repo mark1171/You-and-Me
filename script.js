@@ -600,21 +600,22 @@ document.addEventListener("DOMContentLoaded", () => {
   loadManifest(MANIFEST_ID, {}).then(applyStory);
 });
 
-/* Gallery page — background music. Pick a song, it uploads to
-   Cloudinary (audio goes through Cloudinary's "video" resource type)
-   and the URL + name are saved to a small JSON manifest on
-   jsonbin.io, so the song is still there next time either of you
-   opens the page. */
+/* Gallery page — background music, now a playlist instead of one song.
+   Each upload goes to Cloudinary (audio goes through Cloudinary's
+   "video" resource type) and the whole list of {id, url, name} is
+   saved to a JSON manifest on jsonbin.io, so every saved song is still
+   there — and playable — next time either of you opens the page. */
 document.addEventListener("DOMContentLoaded", () => {
   const bar = document.getElementById("music-bar");
   if (!bar) return;
 
   const MANIFEST_ID = window.JSONBIN_MUSIC_ID;
-  const addBtn = document.getElementById("add-music-btn");
+  const triggerBtn = document.getElementById("music-trigger-btn");
   const nowPlaying = document.getElementById("now-playing");
   const playPauseBtn = document.getElementById("play-pause-btn");
   const trackNameEl = document.getElementById("track-name");
-  const removeBtn = document.getElementById("remove-music-btn");
+  const seek = document.getElementById("track-seek");
+  const playlistEl = document.getElementById("playlist");
   const audio = document.getElementById("bg-audio");
   const fileInput = document.getElementById("music-file-input");
 
@@ -639,49 +640,145 @@ document.addEventListener("DOMContentLoaded", () => {
     }).then((data) => data.secure_url);
   };
 
-  const showTrack = (track) => {
-    audio.src = track.url;
-    trackNameEl.textContent = track.name || "Our song";
-    nowPlaying.hidden = false;
-    addBtn.hidden = true;
-    playPauseBtn.textContent = "▶";
-    playPauseBtn.setAttribute("aria-label", "Play");
+  let tracks = [];
+  let currentId = null;
+  let isSeeking = false;
+
+  const currentTrack = () => tracks.find((t) => t.id === currentId) || null;
+
+  const renderPlaylist = () => {
+    playlistEl.innerHTML = "";
+    tracks.forEach((track) => {
+      const item = document.createElement("div");
+      item.className = `playlist-item${track.id === currentId ? " active" : ""}`;
+      item.dataset.id = String(track.id);
+
+      const nameBtn = document.createElement("button");
+      nameBtn.type = "button";
+      nameBtn.className = "playlist-item-name";
+      nameBtn.textContent = track.name || "Untitled song";
+      nameBtn.addEventListener("click", () => playTrack(track.id));
+      item.appendChild(nameBtn);
+
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "music-remove";
+      removeBtn.setAttribute("aria-label", `Remove ${track.name || "this song"}`);
+      removeBtn.textContent = "\u00D7";
+      removeBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        removeTrack(track.id);
+      });
+      item.appendChild(removeBtn);
+
+      playlistEl.appendChild(item);
+    });
   };
 
-  const showEmpty = () => {
+  const showNowPlayingEmpty = () => {
+    currentId = null;
     audio.pause();
     audio.removeAttribute("src");
     audio.load();
     nowPlaying.hidden = true;
-    addBtn.hidden = false;
   };
 
-  addBtn?.addEventListener("click", () => fileInput.click());
+  // autoplay:false is used when we're just picking which saved track
+  // shows as "current" (e.g. after a delete) without forcing playback.
+  const playTrack = (id, { autoplay = true } = {}) => {
+    const track = tracks.find((t) => t.id === id);
+    if (!track) return;
+
+    currentId = id;
+    audio.src = track.url;
+    trackNameEl.textContent = track.name || "Untitled song";
+    nowPlaying.hidden = false;
+    seek.value = 0;
+    playPauseBtn.textContent = "▶";
+    playPauseBtn.setAttribute("aria-label", "Play");
+    renderPlaylist();
+
+    if (autoplay) {
+      audio.play()
+        .then(() => {
+          playPauseBtn.textContent = "⏸";
+          playPauseBtn.setAttribute("aria-label", "Pause");
+        })
+        .catch(() => { /* browser blocked autoplay — user can tap play */ });
+    }
+  };
+
+  const removeTrack = (id) => {
+    if (!window.confirm("Remove this song from the playlist?")) return;
+
+    const wasCurrent = id === currentId;
+    const updated = tracks.filter((t) => t.id !== id);
+
+    saveManifest(MANIFEST_ID, updated)
+      .then(() => {
+        tracks = updated;
+        if (wasCurrent) {
+          if (tracks.length) playTrack(tracks[0].id, { autoplay: false });
+          else showNowPlayingEmpty();
+        }
+        renderPlaylist();
+      })
+      .catch(() => alert("Couldn't remove that song — check your connection and try again."));
+  };
+
+  triggerBtn?.addEventListener("click", () => fileInput.click());
 
   fileInput?.addEventListener("change", () => {
     const file = fileInput.files?.[0];
     if (!file) return;
 
-    addBtn.disabled = true;
-    addBtn.textContent = "Uploading…";
+    const defaultName = file.name.replace(/\.[^/.]+$/, "");
+    const name = window.prompt("What's this song called?", defaultName) || defaultName;
+
+    triggerBtn.disabled = true;
+    triggerBtn.textContent = "Uploading…";
 
     uploadAudioToCloudinary(file)
       .then((url) => {
-        const track = { url, name: file.name.replace(/\.[^/.]+$/, "") };
-        return saveManifest(MANIFEST_ID, track).then(() => showTrack(track));
+        const track = { id: Date.now(), url, name };
+        const updated = [...tracks, track];
+        return saveManifest(MANIFEST_ID, updated).then(() => {
+          tracks = updated;
+          playTrack(track.id);
+        });
       })
       .catch((err) => {
         console.error(err);
         alert("Sorry, that song couldn't be saved. Please check your connection and try again.");
       })
       .finally(() => {
-        addBtn.disabled = false;
-        addBtn.textContent = "+ Add music";
+        triggerBtn.disabled = false;
+        triggerBtn.textContent = "+ Add music";
         fileInput.value = "";
       });
   });
 
+  // Click the currently-playing track's name to rename it in place.
+  trackNameEl?.addEventListener("click", () => {
+    const track = currentTrack();
+    if (!track) return;
+    const newName = window.prompt("Rename this song:", track.name || "");
+    if (newName === null) return;
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+
+    const updated = tracks.map((t) => (t.id === track.id ? { ...t, name: trimmed } : t));
+    saveManifest(MANIFEST_ID, updated)
+      .then(() => {
+        tracks = updated;
+        trackNameEl.textContent = trimmed;
+        renderPlaylist();
+      })
+      .catch(() => alert("Couldn't rename the song — check your connection and try again."));
+  });
+
   playPauseBtn?.addEventListener("click", () => {
+    if (!currentId) return;
     if (audio.paused) {
       audio.play();
       playPauseBtn.textContent = "⏸";
@@ -693,14 +790,49 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  removeBtn?.addEventListener("click", () => {
-    saveManifest(MANIFEST_ID, {})
-      .then(() => showEmpty())
-      .catch(() => alert("Couldn't remove the song — check your connection and try again."));
+  // Scrub bar: drag to jump anywhere in the song.
+  audio.addEventListener("loadedmetadata", () => {
+    seek.max = audio.duration || 0;
   });
 
-  loadManifest(MANIFEST_ID, {}).then((track) => {
-    if (track && track.url) showTrack(track);
+  audio.addEventListener("timeupdate", () => {
+    if (!isSeeking) seek.value = audio.currentTime;
+  });
+
+  seek?.addEventListener("input", () => {
+    isSeeking = true;
+    audio.currentTime = Number(seek.value);
+  });
+
+  seek?.addEventListener("change", () => {
+    isSeeking = false;
+  });
+
+  const finishInit = () => {
+    renderPlaylist();
+    if (tracks.length) playTrack(tracks[0].id, { autoplay: false });
+    else showNowPlayingEmpty();
+  };
+
+  loadManifest(MANIFEST_ID, []).then((saved) => {
+    if (Array.isArray(saved) && saved.length) {
+      tracks = saved;
+      finishInit();
+      return;
+    }
+
+    // Older versions of this page saved a single {url, name} object
+    // instead of a list — migrate that into the new playlist format
+    // instead of silently losing the song.
+    loadManifest(MANIFEST_ID, {}).then((legacy) => {
+      if (legacy && legacy.url) {
+        tracks = [{ id: Date.now(), url: legacy.url, name: legacy.name || "Untitled song" }];
+        saveManifest(MANIFEST_ID, tracks).catch(() => {});
+      } else {
+        tracks = [];
+      }
+      finishInit();
+    });
   });
 });
 
