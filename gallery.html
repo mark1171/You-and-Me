@@ -75,6 +75,32 @@
     <input type="file" id="music-file-input" accept="audio/*" hidden />
   </section>
 
+  <!-- Custom confirm dialog for deleting a gallery photo or song —
+       a real browser confirm() can get silently swallowed inside
+       in-app browsers (Facebook/Instagram/Messenger link previews),
+       so this is drawn on the page itself instead. Lives directly
+       under <body>, not inside .content, so it's never trapped by
+       .content's fade-in animation transform (see memories.html for
+       the full explanation). -->
+  <div class="confirm-modal" id="delete-confirm-modal" hidden>
+    <div class="confirm-modal-backdrop" id="delete-confirm-backdrop"></div>
+    <div class="confirm-modal-content">
+      <p id="delete-confirm-message">Delete this?</p>
+      <div class="confirm-modal-actions">
+        <button class="btn btn-primary" id="delete-confirm-yes" type="button">Delete</button>
+        <button class="btn btn-ghost" id="delete-confirm-no" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global loading overlay, shown while a photo/song is uploading
+       or being removed. Same viewport-fixed sibling-of-body placement
+       as the confirm dialog above. -->
+  <div class="loading-overlay" id="loading-overlay" hidden>
+    <div class="loading-spinner" aria-hidden="true"></div>
+    <p id="loading-overlay-message">Loading…</p>
+  </div>
+
   <footer>made with care, just for you</footer>
 </body>
 </html>
