@@ -1,5 +1,11 @@
 window.addEventListener("load", () => {
   document.body.classList.add("loaded");
+
+  const pageLoader = document.getElementById("page-loading-overlay");
+  if (pageLoader) {
+    pageLoader.classList.add("hide");
+    pageLoader.addEventListener("transitionend", () => pageLoader.remove(), { once: true });
+  }
 });
 
 /* Upload a file straight to Cloudinary from the browser (no backend
@@ -113,6 +119,76 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+/* Shared delete-confirm dialog, used on every page that has one of
+   these (memories, gallery photos, gallery music, letters). A real
+   window.confirm() can get silently blocked inside in-app browsers
+   (Facebook/Instagram/Messenger link previews) and never show
+   anything, so this is drawn on the page itself instead — it just
+   needs the #delete-confirm-modal markup present on the page.
+   Usage: window.confirmDialog("Delete this thing?").then(yes => ...) */
+document.addEventListener("DOMContentLoaded", () => {
+  const confirmModal = document.getElementById("delete-confirm-modal");
+  const confirmBackdrop = document.getElementById("delete-confirm-backdrop");
+  const confirmMessage = document.getElementById("delete-confirm-message");
+  const confirmYes = document.getElementById("delete-confirm-yes");
+  const confirmNo = document.getElementById("delete-confirm-no");
+  let confirmResolve = null;
+
+  window.confirmDialog = (message) => {
+    if (!confirmModal) return Promise.resolve(window.confirm(message));
+    if (confirmMessage && message) confirmMessage.textContent = message;
+    confirmModal.hidden = false;
+    document.body.style.overflow = "hidden";
+    return new Promise((resolve) => {
+      confirmResolve = resolve;
+    });
+  };
+
+  const closeDeleteConfirm = (result) => {
+    if (!confirmModal) return;
+    confirmModal.hidden = true;
+    document.body.style.overflow = "";
+    if (confirmResolve) {
+      confirmResolve(result);
+      confirmResolve = null;
+    }
+  };
+
+  confirmYes?.addEventListener("click", () => closeDeleteConfirm(true));
+  confirmNo?.addEventListener("click", () => closeDeleteConfirm(false));
+  confirmBackdrop?.addEventListener("click", () => closeDeleteConfirm(false));
+});
+
+/* Global loading overlay, shown while a photo (or anything else) is
+   uploading or being removed. Usage: window.showLoading("Uploading…")
+   to show it, window.hideLoading() to hide it. No-ops safely on any
+   page that doesn't have the #loading-overlay markup.
+   Enforces a minimum visible time so a fast delete/save doesn't just
+   flash on screen for an instant — it always stays up long enough to
+   actually read. */
+document.addEventListener("DOMContentLoaded", () => {
+  const overlay = document.getElementById("loading-overlay");
+  const overlayMessage = document.getElementById("loading-overlay-message");
+  const MIN_VISIBLE_MS = 1800;
+  let shownAt = 0;
+
+  window.showLoading = (message) => {
+    if (!overlay) return;
+    if (overlayMessage && message) overlayMessage.textContent = message;
+    overlay.hidden = false;
+    shownAt = Date.now();
+  };
+
+  window.hideLoading = () => {
+    if (!overlay) return;
+    const elapsed = Date.now() - shownAt;
+    const wait = Math.max(0, MIN_VISIBLE_MS - elapsed);
+    setTimeout(() => {
+      overlay.hidden = true;
+    }, wait);
+  };
+});
+
 /* Ambient blue/violet particle field (index page) */
 document.addEventListener("DOMContentLoaded", () => {
   const field = document.getElementById("particle-field");
@@ -170,6 +246,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalSave = document.getElementById("memory-modal-save");
   const modalCancel = document.getElementById("memory-modal-cancel");
 
+  const addModal = document.getElementById("add-memory-modal");
+  const addModalBackdrop = document.getElementById("add-memory-backdrop");
+  const addModalPhoto = document.getElementById("add-memory-photo");
+  const addModalCaption = document.getElementById("add-memory-caption");
+  const addModalDate = document.getElementById("add-memory-date");
+  const addModalSave = document.getElementById("add-memory-save");
+  const addModalCancel = document.getElementById("add-memory-cancel");
+  const categoryBtns = document.querySelectorAll(".category-btn[data-category]");
+
   const formatDate = (isoDate) => {
     if (!isoDate) return "";
     const d = new Date(`${isoDate}T00:00:00`);
@@ -179,37 +264,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const modalContent = modal?.querySelector(".memory-modal-content");
 
-  // Custom delete-confirm dialog — used instead of window.confirm(),
-  // which can get silently blocked inside in-app browsers (Facebook/
-  // Instagram/Messenger link previews) and never show anything.
-  const confirmModal = document.getElementById("delete-confirm-modal");
-  const confirmBackdrop = document.getElementById("delete-confirm-backdrop");
-  const confirmYes = document.getElementById("delete-confirm-yes");
-  const confirmNo = document.getElementById("delete-confirm-no");
-  let confirmResolve = null;
-
-  const askDeleteConfirm = () => {
-    if (!confirmModal) return Promise.resolve(true);
-    confirmModal.hidden = false;
-    document.body.style.overflow = "hidden";
-    return new Promise((resolve) => {
-      confirmResolve = resolve;
-    });
-  };
-
-  const closeDeleteConfirm = (result) => {
-    if (!confirmModal) return;
-    confirmModal.hidden = true;
-    document.body.style.overflow = "";
-    if (confirmResolve) {
-      confirmResolve(result);
-      confirmResolve = null;
-    }
-  };
-
-  confirmYes?.addEventListener("click", () => closeDeleteConfirm(true));
-  confirmNo?.addEventListener("click", () => closeDeleteConfirm(false));
-  confirmBackdrop?.addEventListener("click", () => closeDeleteConfirm(false));
 
   const openModal = (memory, sourceEl) => {
     if (!modal) return;
@@ -286,15 +340,52 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   });
 
-  const askCategory = () => {
-    const raw = (window.prompt("Whose memory is this — mark, monica, or us?", "us") || "us")
-      .trim()
-      .toLowerCase();
-    return CATEGORIES.includes(raw) ? raw : "us";
+  // New add-memory dialog: shows a local preview of the picked photo
+  // plus a caption field and a Mark/Monica/Us picker, in place of the
+  // two separate window.prompt() popups this used to be.
+  let selectedCategory = "us";
+  let pendingObjectUrl = null;
+
+  const setSelectedCategory = (category) => {
+    selectedCategory = CATEGORIES.includes(category) ? category : "us";
+    categoryBtns.forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.category === selectedCategory);
+    });
   };
 
+  categoryBtns.forEach((btn) => {
+    btn.addEventListener("click", () => setSelectedCategory(btn.dataset.category));
+  });
+
+  const openAddModal = (file) => {
+    if (!addModal) return;
+    pendingObjectUrl = URL.createObjectURL(file);
+    addModalPhoto.style.backgroundImage = `url(${pendingObjectUrl})`;
+    addModalCaption.value = "";
+    addModalDate.value = "";
+    setSelectedCategory("us");
+    addModal.hidden = false;
+    document.body.style.overflow = "hidden";
+  };
+
+  const closeAddModal = () => {
+    if (!addModal) return;
+    addModal.hidden = true;
+    document.body.style.overflow = "";
+    if (pendingObjectUrl) {
+      URL.revokeObjectURL(pendingObjectUrl);
+      pendingObjectUrl = null;
+    }
+  };
+
+  addModalBackdrop?.addEventListener("click", closeAddModal);
+  addModalCancel?.addEventListener("click", () => {
+    closeAddModal();
+    fileInput.value = "";
+  });
+
   const render = () => {
-    grid.querySelectorAll(".memory-card:not(.memory-add)").forEach((el) => el.remove());
+    grid.querySelectorAll(".memory-card").forEach((el) => el.remove());
 
     const filtered = activeFilter === "all"
       ? allMemories
@@ -347,9 +438,10 @@ document.addEventListener("DOMContentLoaded", () => {
       del.textContent = "×";
       del.addEventListener("click", (e) => {
         e.stopPropagation();
-        askDeleteConfirm().then((confirmed) => {
+        window.confirmDialog("Delete this memory? This can't be undone.").then((confirmed) => {
           if (!confirmed) return;
 
+          window.showLoading("Removing photo…");
           loadManifest(MANIFEST_ID, []).then((current) => {
             const updated = current.filter((m) => m.src !== memory.src);
             saveManifest(MANIFEST_ID, updated)
@@ -357,7 +449,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 allMemories = updated;
                 render();
               })
-              .catch(() => alert("Couldn't remove that memory — check your connection and try again."));
+              .catch(() => alert("Couldn't remove that memory — check your connection and try again."))
+              .finally(() => window.hideLoading());
           });
         });
       });
@@ -375,7 +468,7 @@ document.addEventListener("DOMContentLoaded", () => {
         card.style.animation = "none";
       }, { once: true });
 
-      grid.insertBefore(card, addBtn);
+      grid.appendChild(card);
     });
   };
 
@@ -403,13 +496,25 @@ document.addEventListener("DOMContentLoaded", () => {
   fileInput?.addEventListener("change", () => {
     const file = fileInput.files?.[0];
     if (!file) return;
+    openAddModal(file);
+  });
+
+  addModalSave?.addEventListener("click", () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+
+    addModalSave.disabled = true;
+    addModalSave.textContent = "Saving…";
+    window.showLoading("Adding photo…");
+
+    const caption = addModalCaption.value.trim();
+    const date = addModalDate.value;
+    const category = selectedCategory;
 
     uploadToCloudinary(file)
       .then((url) => {
-        const caption = window.prompt("Add a short caption for this memory (optional):", "") || "";
-        const category = askCategory();
         return loadManifest(MANIFEST_ID, []).then((current) => {
-          const updated = [...current, { src: url, caption, category }];
+          const updated = [...current, { src: url, caption, date, category }];
           return saveManifest(MANIFEST_ID, updated).then(() => {
             allMemories = updated;
             render();
@@ -417,12 +522,17 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       })
       .then(() => {
+        closeAddModal();
         fileInput.value = "";
       })
       .catch((err) => {
         console.error(err);
         alert("Sorry, that photo couldn't be saved. Please check your connection and try again.");
-        fileInput.value = "";
+      })
+      .finally(() => {
+        addModalSave.disabled = false;
+        addModalSave.textContent = "Save";
+        window.hideLoading();
       });
   });
 
@@ -512,15 +622,21 @@ document.addEventListener("DOMContentLoaded", () => {
       removeBtn.textContent = "×";
       removeBtn.addEventListener("click", (e) => {
         e.stopPropagation();
-        loadManifest(MANIFEST_ID, {}).then((current) => {
-          const updated = { ...current };
-          delete updated[i];
-          saveManifest(MANIFEST_ID, updated)
-            .then(() => {
-              currentPhotos = updated;
-              clearPhoto(item);
-            })
-            .catch(() => alert("Couldn't remove that photo — check your connection and try again."));
+        window.confirmDialog("Remove this photo from the gallery?").then((confirmed) => {
+          if (!confirmed) return;
+
+          window.showLoading("Removing photo…");
+          loadManifest(MANIFEST_ID, {}).then((current) => {
+            const updated = { ...current };
+            delete updated[i];
+            saveManifest(MANIFEST_ID, updated)
+              .then(() => {
+                currentPhotos = updated;
+                clearPhoto(item);
+              })
+              .catch(() => alert("Couldn't remove that photo — check your connection and try again."))
+              .finally(() => window.hideLoading());
+          });
         });
       });
       item.appendChild(removeBtn);
@@ -545,6 +661,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const file = fileInput.files?.[0];
     if (!file || editIndex === null) return;
 
+    window.showLoading("Adding photo…");
+
     uploadToCloudinary(file, `you-and-me-gallery-slot-${editIndex}-${Date.now()}`)
       .then((url) => {
         return loadManifest(MANIFEST_ID, {}).then((current) => {
@@ -564,7 +682,8 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("Sorry, that photo couldn't be saved. Please check your connection and try again.");
         fileInput.value = "";
         editIndex = null;
-      });
+      })
+      .finally(() => window.hideLoading());
   });
 
   container.style.transition = "none";
@@ -816,21 +935,26 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const removeTrack = (id) => {
-    if (!window.confirm("Remove this song from the playlist?")) return;
+    window.confirmDialog("Remove this song from the playlist?").then((confirmed) => {
+      if (!confirmed) return;
 
-    const wasCurrent = id === currentId;
-    const updated = tracks.filter((t) => t.id !== id);
+      window.showLoading("Removing song…");
 
-    saveManifest(MANIFEST_ID, updated)
-      .then(() => {
-        tracks = updated;
-        if (wasCurrent) {
-          if (tracks.length) playTrack(tracks[0].id, { autoplay: false });
-          else showNowPlayingEmpty();
-        }
-        renderPlaylist();
-      })
-      .catch(() => alert("Couldn't remove that song — check your connection and try again."));
+      const wasCurrent = id === currentId;
+      const updated = tracks.filter((t) => t.id !== id);
+
+      saveManifest(MANIFEST_ID, updated)
+        .then(() => {
+          tracks = updated;
+          if (wasCurrent) {
+            if (tracks.length) playTrack(tracks[0].id, { autoplay: false });
+            else showNowPlayingEmpty();
+          }
+          renderPlaylist();
+        })
+        .catch(() => alert("Couldn't remove that song — check your connection and try again."))
+        .finally(() => window.hideLoading());
+    });
   };
 
   triggerBtn?.addEventListener("click", () => fileInput.click());
@@ -844,6 +968,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     triggerBtn.disabled = true;
     triggerBtn.textContent = "Uploading…";
+    window.showLoading("Adding song…");
 
     uploadAudioToCloudinary(file)
       .then((url) => {
@@ -862,6 +987,7 @@ document.addEventListener("DOMContentLoaded", () => {
         triggerBtn.disabled = false;
         triggerBtn.textContent = "+ Add music";
         fileInput.value = "";
+        window.hideLoading();
       });
   });
 
@@ -982,18 +1108,22 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentLetters = [];
 
   const deleteLetter = (letter) => {
-    const confirmed = window.confirm("Delete this letter? This can't be undone.");
-    if (!confirmed) return;
+    window.confirmDialog("Delete this letter? This can't be undone.").then((confirmed) => {
+      if (!confirmed) return;
 
-    const updated = currentLetters.filter((l) => l !== letter);
-    saveManifest(LETTERS_ID, updated)
-      .then(() => {
-        currentLetters = updated;
-        render(currentLetters);
-      })
-      .catch(() => {
-        alert("Couldn't remove that letter — check your connection and try again.");
-      });
+      window.showLoading("Removing letter…");
+
+      const updated = currentLetters.filter((l) => l !== letter);
+      saveManifest(LETTERS_ID, updated)
+        .then(() => {
+          currentLetters = updated;
+          render(currentLetters);
+        })
+        .catch(() => {
+          alert("Couldn't remove that letter — check your connection and try again.");
+        })
+        .finally(() => window.hideLoading());
+    });
   };
 
   const render = (letters) => {
@@ -1094,6 +1224,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     saveBtn.disabled = true;
     saveBtn.textContent = "Saving…";
+    window.showLoading("Adding letter…");
 
     const updated = [...currentLetters, { text, date }];
 
@@ -1111,6 +1242,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .finally(() => {
         saveBtn.disabled = false;
         saveBtn.textContent = "Save letter";
+        window.hideLoading();
       });
   });
 });
