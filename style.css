@@ -452,7 +452,7 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
     white-space: nowrap;
     margin-bottom: 0;
     flex-basis: 100%;
-    order: -1;
+    margin-top: 0.5rem;
   }
 
   .memories-grid {
@@ -661,41 +661,171 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   border-color: var(--violet-soft);
 }
 
+.category-picker {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.category-btn {
+  flex: 1;
+  min-width: 72px;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  padding: 0.55rem 0.7rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.category-btn:hover {
+  color: var(--text-main);
+  border-color: var(--violet-soft);
+}
+
+.category-btn.active {
+  color: var(--text-main);
+  background: linear-gradient(135deg, rgba(79, 124, 255, 0.35), rgba(139, 92, 246, 0.35));
+  border-color: var(--violet-soft);
+}
+
+/* ===== Initial page-loading screen (index page) ===== */
+.page-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+  background:
+    radial-gradient(ellipse 60% 42% at 18% 0%, rgba(129, 164, 244, 0.55) 0%, transparent 62%),
+    radial-gradient(ellipse 55% 45% at 88% 12%, rgba(196, 165, 245, 0.5) 0%, transparent 62%),
+    radial-gradient(ellipse 60% 45% at 8% 88%, rgba(151, 224, 209, 0.4) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 45% at 92% 96%, rgba(167, 139, 250, 0.4) 0%, transparent 62%),
+    linear-gradient(170deg, #eef1fc 0%, var(--bg-mid) 40%, var(--bg-deep) 75%, #cdd1ec 100%);
+  transition: opacity 0.5s ease;
+}
+
+.page-loading-overlay.hide {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.page-loading-glyph {
+  font-size: 2rem;
+  background: linear-gradient(120deg, var(--blue), var(--violet));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: glyphPulse 2.6s ease-in-out infinite;
+}
+
+
+/* ===== Loading overlay ===== */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+}
+
+.loading-overlay[hidden] {
+  display: none;
+}
+
+.loading-spinner {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 3px solid rgba(139, 92, 246, 0.25);
+  border-top-color: var(--violet);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-overlay p {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  color: var(--text-main);
+  margin: 0;
+}
+
 .memory-modal-actions {
   display: flex;
   gap: 0.8rem;
   margin-top: 1.1rem;
 }
 
-.memory-add {
-  align-self: start;
-  font-family: var(--font-body);
-  color: var(--text-dim);
-  cursor: pointer;
-  flex-direction: column;
-  gap: 0.35rem;
+/* Floating "Add photo" button — fixed to the screen instead of
+   living inside the memories grid, so it's always within reach no
+   matter how far down you've scrolled through photos. */
+.fab-add-memory {
+  position: fixed;
+  right: clamp(1.1rem, 4vw, 2rem);
+  bottom: clamp(1.1rem, 4vw, 2rem);
+  z-index: 100;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  border-style: dashed;
-  background: rgba(255, 255, 255, 0.35);
-  transition: border-color 0.25s ease, color 0.25s ease, background 0.25s ease;
+  gap: 0.5rem;
+  padding: 0.9rem 1.3rem 0.9rem 1.1rem;
+  border: none;
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: linear-gradient(120deg, var(--blue), var(--violet));
+  box-shadow: 0 14px 34px rgba(79, 60, 160, 0.4);
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
 }
 
-.memory-add span:last-child {
-  font-size: 0.68rem;
-  letter-spacing: 0.06em;
+.fab-add-memory:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow: 0 18px 40px rgba(79, 60, 160, 0.48);
 }
 
-.memory-add:hover {
-  border-color: var(--violet-soft);
-  color: var(--text-main);
-  background: rgba(196, 181, 253, 0.06);
-}
-
-.memory-add .add-icon {
-  font-size: 1.2rem;
+.fab-add-memory .add-icon {
+  font-size: 1.15rem;
   font-weight: 300;
   line-height: 1;
+}
+
+.fab-add-memory .fab-label {
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .fab-add-memory .fab-label {
+    display: none;
+  }
+
+  .fab-add-memory {
+    padding: 0.9rem;
+  }
+
+  .fab-add-memory .add-icon {
+    font-size: 1.3rem;
+  }
 }
 
 /* ===== Delete confirm dialog ===== */
