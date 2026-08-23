@@ -30,7 +30,12 @@
   <section class="content fade-in">
     <span class="eyebrow">Snapshots</span>
     <h1>Our Memories</h1>
-    
+    <p class="lede">
+      Tap "Add a memory" to upload a photo and a little caption. Tap any
+      photo to edit its caption or add a date — it's all saved right in
+      this browser, so it'll still be here next time you visit.
+    </p>
+
     <div class="memories-layout">
       <aside class="memories-filters" role="tablist" aria-label="Filter memories">
         <button class="filter-btn active" data-filter="all" type="button" role="tab" aria-selected="true">All</button>
@@ -48,6 +53,24 @@
     </div>
 
     <input type="file" id="memory-file-input" accept="image/*" hidden />
+
+    <div class="memory-modal" id="memory-modal" hidden>
+      <div class="memory-modal-backdrop" id="memory-modal-backdrop"></div>
+      <div class="memory-modal-content">
+        <button class="memory-modal-close" id="memory-modal-close" type="button" aria-label="Close">&times;</button>
+        <div class="memory-modal-photo" id="memory-modal-photo"></div>
+        <div class="memory-modal-fields">
+          <label for="memory-modal-caption">Caption</label>
+          <input type="text" id="memory-modal-caption" placeholder="Add a caption…" maxlength="80" />
+          <label for="memory-modal-date">Date</label>
+          <input type="date" id="memory-modal-date" />
+          <div class="memory-modal-actions">
+            <button class="btn btn-primary" id="memory-modal-save" type="button">Save</button>
+            <button class="btn btn-ghost" id="memory-modal-cancel" type="button">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
 
   <footer>made with care, just for you</footer>
