@@ -189,6 +189,15 @@ nav a.active {
   padding: clamp(2rem, 6vw, 4.5rem) 1.5rem 5rem;
 }
 
+/* Memories page only — it's mostly a photo grid, so on a wide desktop
+   screen it should use that width instead of sitting in the same
+   narrow centered column as text-heavy pages. Full width now — the
+   small side gutter comes from .content's own padding, not from a
+   percentage cap that was still leaving a visible margin. */
+.content.content-wide {
+  max-width: 100%;
+}
+
 .fade-in {
   animation: fadeInUp 0.9s ease both;
 }
@@ -394,8 +403,7 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
 
 .memories-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 140px));
-  justify-content: center;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 1.1rem;
   flex: 1;
 }
@@ -449,7 +457,7 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   margin: 0;
   font: inherit;
   width: 100%;
-  max-width: 140px;
+  max-width: 220px;
   text-align: left;
 }
 
