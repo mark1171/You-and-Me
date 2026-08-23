@@ -599,12 +599,10 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
 .memory-modal-backdrop {
   position: absolute;
   inset: 0;
-  /* Light and blurry instead of a dark overlay — bumped the blur up
-     further (and the tint back down) so whatever photo is behind the
-     modal still isn't recognizable, without darkening the screen. */
+  /* Light and blurry instead of a dark overlay. */
   background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(32px) saturate(140%);
-  -webkit-backdrop-filter: blur(32px) saturate(140%);
+  backdrop-filter: blur(2px) saturate(140%);
+  -webkit-backdrop-filter: blur(2px) saturate(140%);
 }
 
 .memory-modal-content {
