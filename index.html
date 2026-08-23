@@ -3,15 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gallery · You & Me</title>
+  <title>You & Me</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
-  <script defer src="cloudinary-config.js"></script>
-  <script defer src="jsonbin-config.js"></script>
   <script defer src="script.js"></script>
 </head>
 <body>
+
+  <!-- Shown the instant the page starts loading, before fonts/images/
+       particles are ready, so there's never a blank or half-styled
+       flash. script.js fades this out and removes it once the page's
+       "load" event fires (same moment body gets its .loaded fade-in). -->
+  <div class="page-loading-overlay" id="page-loading-overlay">
+    <span class="page-loading-glyph">&#10084;</span>
+    <div class="loading-spinner" aria-hidden="true"></div>
+  </div>
 
   <nav>
     <a href="index.html" class="nav-brand"><span class="glyph">&#10084;</span> You &amp; Me</a>
@@ -21,85 +28,43 @@
     <div class="nav-links" id="nav-links">
       <a href="index.html">Home</a>
       <a href="memories.html">Memories</a>
-      <a href="gallery.html" class="active">Gallery</a>
+      <a href="gallery.html">Gallery</a>
       <a href="message.html">Message</a>
       <a href="ourstory.html">Our Story</a>
     </div>
   </nav>
 
-  <section class="content fade-in">
-    <span class="eyebrow">In motion</span>
-    <h1>Gallery</h1>
-    <p class="lede">
-      A slow-spinning carousel of our favorite clips.
-    </p>
+  <div id="particle-field"></div>
 
-    <div class="carousel-stage">
-      <div class="carousel-container">
-        <div class="carousel-item">Clip 01</div>
-        <div class="carousel-item">Clip 02</div>
-        <div class="carousel-item">Clip 03</div>
-        <div class="carousel-item">Clip 04</div>
-        <div class="carousel-item">Clip 05</div>
-      </div>
-    </div>
-
-    <input type="file" id="carousel-file-input" accept="image/*" hidden />
-
-    <div class="carousel-controls">
-      <button id="prev-btn" aria-label="Previous">&#8592;</button>
-      <button id="next-btn" aria-label="Next">&#8594;</button>
-    </div>
-
-    <div class="carousel-count-control">
-      <label for="carousel-count">Number of photos</label>
-      <input type="number" id="carousel-count" min="2" max="12" value="5" />
-      <button id="carousel-count-apply" type="button" class="btn btn-ghost">Update</button>
-    </div>
-
-    <div class="music-bar" id="music-bar">
-      <div class="music-toolbar">
-        <button class="btn btn-ghost music-trigger" id="music-trigger-btn" type="button">+ Add music</button>
+  <section class="hero fade-in">
+    <div class="hero-content">
+      <span class="eyebrow">A little space just for us</span>
+      <h1>Every day,<br />I choose you again.</h1>
+      <p class="lede">
+        This is our corner of the internet the memories we've collected,
+        the faces we love, and the little reasons this still feels like home.
+      </p>
+      <div class="btn-row">
+        <a class="btn btn-primary" href="memories.html">See our memories</a>
+        <a class="btn btn-ghost" href="ourstory.html">Read our story</a>
       </div>
 
-      <div class="now-playing" id="now-playing" hidden>
-        <button class="play-btn" id="play-pause-btn" type="button" aria-label="Play">&#9658;</button>
-        <span class="track-name" id="track-name" title="Click to rename"></span>
-        <input type="range" id="track-seek" class="track-seek" min="0" max="0" step="0.01" value="0" />
+      <div class="stat-row">
+        <div>
+          <div class="stat-num">2nd</div>
+          <div class="stat-label">Month, and counting</div>
+        </div>
+        <div>
+          <div class="stat-num">&#8734;</div>
+          <div class="stat-label">inside jokes</div>
+        </div>
+        <div>
+          <div class="stat-num">01</div>
+          <div class="stat-label">favorite person</div>
+        </div>
       </div>
-
-      <div class="playlist" id="playlist"></div>
-
-      <audio id="bg-audio" preload="metadata" loop></audio>
     </div>
-    <input type="file" id="music-file-input" accept="audio/*" hidden />
   </section>
-
-  <!-- Custom confirm dialog for deleting a gallery photo or song —
-       a real browser confirm() can get silently swallowed inside
-       in-app browsers (Facebook/Instagram/Messenger link previews),
-       so this is drawn on the page itself instead. Lives directly
-       under <body>, not inside .content, so it's never trapped by
-       .content's fade-in animation transform (see memories.html for
-       the full explanation). -->
-  <div class="confirm-modal" id="delete-confirm-modal" hidden>
-    <div class="confirm-modal-backdrop" id="delete-confirm-backdrop"></div>
-    <div class="confirm-modal-content">
-      <p id="delete-confirm-message">Delete this?</p>
-      <div class="confirm-modal-actions">
-        <button class="btn btn-primary" id="delete-confirm-yes" type="button">Delete</button>
-        <button class="btn btn-ghost" id="delete-confirm-no" type="button">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Global loading overlay, shown while a photo/song is uploading
-       or being removed. Same viewport-fixed sibling-of-body placement
-       as the confirm dialog above. -->
-  <div class="loading-overlay" id="loading-overlay" hidden>
-    <div class="loading-spinner" aria-hidden="true"></div>
-    <p id="loading-overlay-message">Loading…</p>
-  </div>
 
   <footer>made with care, just for you</footer>
 </body>
