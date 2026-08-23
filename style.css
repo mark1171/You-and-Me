@@ -551,12 +551,23 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   padding: 1.2rem;
 }
 
+/* A plain "display: flex" rule like the one above silently overrides
+   the browser's default [hidden] behavior at equal specificity — so
+   the modal (and its blurred backdrop) was showing permanently over
+   the whole grid instead of only when a photo was tapped. */
+.memory-modal[hidden] {
+  display: none;
+}
+
 .memory-modal-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  /* Light and blurry instead of a dark overlay — bumped the blur up
+     further (and the tint back down) so whatever photo is behind the
+     modal still isn't recognizable, without darkening the screen. */
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(32px) saturate(140%);
+  -webkit-backdrop-filter: blur(32px) saturate(140%);
 }
 
 .memory-modal-content {
