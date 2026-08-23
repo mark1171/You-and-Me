@@ -177,7 +177,9 @@ document.addEventListener("DOMContentLoaded", () => {
     return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
   };
 
-  const openModal = (memory) => {
+  const modalContent = modal?.querySelector(".memory-modal-content");
+
+  const openModal = (memory, sourceEl) => {
     if (!modal) return;
     editingSrc = memory.src;
     modalPhoto.style.backgroundImage = `url(${optimizedUrl(memory.src, 700)})`;
@@ -185,6 +187,36 @@ document.addEventListener("DOMContentLoaded", () => {
     modalDate.value = memory.date || "";
     modal.hidden = false;
     document.body.style.overflow = "hidden";
+
+    // Animate the modal growing out from the exact photo that was
+    // tapped, instead of just appearing in the middle of the screen —
+    // makes it feel like the photo itself is expanding into the popup.
+    // Plays on every device now (phone, tablet, laptop, desktop).
+    if (sourceEl && modalContent) {
+      const from = sourceEl.getBoundingClientRect();
+      const to = modalContent.getBoundingClientRect();
+      const scaleX = from.width / to.width;
+      const scaleY = from.height / to.height;
+      const dx = (from.left + from.width / 2) - (to.left + to.width / 2);
+      const dy = (from.top + from.height / 2) - (to.top + to.height / 2);
+
+      modalContent.style.transition = "none";
+      modalContent.style.transform = `translate(${dx}px, ${dy}px) scale(${scaleX}, ${scaleY})`;
+      modalContent.style.opacity = "0.5";
+
+      // Force the browser to paint the starting position before we
+      // switch the transition back on, or it'll skip straight to the
+      // end state with no animation at all.
+      requestAnimationFrame(() => {
+        modalContent.style.transition = "transform 0.38s cubic-bezier(.22,.9,.25,1), opacity 0.28s ease";
+        modalContent.style.transform = "translate(0, 0) scale(1, 1)";
+        modalContent.style.opacity = "1";
+      });
+    } else if (modalContent) {
+      modalContent.style.transition = "";
+      modalContent.style.transform = "";
+      modalContent.style.opacity = "";
+    }
   };
 
   const closeModal = () => {
@@ -295,11 +327,11 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       card.appendChild(del);
 
-      card.addEventListener("click", () => openModal(memory));
+      card.addEventListener("click", () => openModal(memory, card));
       card.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          openModal(memory);
+          openModal(memory, card);
         }
       });
 
