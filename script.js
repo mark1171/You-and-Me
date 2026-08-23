@@ -501,14 +501,25 @@ document.addEventListener("DOMContentLoaded", () => {
     count = Math.min(12, Math.max(2, count));
     countInput.value = count;
     buildItems(count);
-  });
 
-  const initialCount = countInput
-    ? Math.min(12, Math.max(2, parseInt(countInput.value, 10) || 5))
-    : 5;
+    // Save the chosen slot count alongside the photos (as a special
+    // "_count" key) so it's remembered — and synced across devices —
+    // instead of resetting to the default on every reload.
+    const updated = { ...currentPhotos, _count: count };
+    saveManifest(MANIFEST_ID, updated)
+      .then(() => { currentPhotos = updated; })
+      .catch(() => alert("Couldn't save the photo count — check your connection and try again."));
+  });
 
   loadManifest(MANIFEST_ID, {}).then((photos) => {
     currentPhotos = photos;
+
+    const savedCount = Number.isInteger(photos._count) ? photos._count : null;
+    const initialCount = savedCount
+      ? Math.min(12, Math.max(2, savedCount))
+      : (countInput ? Math.min(12, Math.max(2, parseInt(countInput.value, 10) || 5)) : 5);
+
+    if (countInput) countInput.value = initialCount;
     buildItems(initialCount);
   });
 });
