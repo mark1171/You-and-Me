@@ -158,6 +158,69 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let allMemories = [];
   let activeFilter = "all";
+  let editingSrc = null;
+
+  const modal = document.getElementById("memory-modal");
+  const modalBackdrop = document.getElementById("memory-modal-backdrop");
+  const modalClose = document.getElementById("memory-modal-close");
+  const modalPhoto = document.getElementById("memory-modal-photo");
+  const modalCaption = document.getElementById("memory-modal-caption");
+  const modalDate = document.getElementById("memory-modal-date");
+  const modalSave = document.getElementById("memory-modal-save");
+  const modalCancel = document.getElementById("memory-modal-cancel");
+
+  const formatDate = (isoDate) => {
+    if (!isoDate) return "";
+    const d = new Date(`${isoDate}T00:00:00`);
+    if (Number.isNaN(d.getTime())) return "";
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  };
+
+  const openModal = (memory) => {
+    if (!modal) return;
+    editingSrc = memory.src;
+    modalPhoto.style.backgroundImage = `url(${optimizedUrl(memory.src, 700)})`;
+    modalCaption.value = memory.caption || "";
+    modalDate.value = memory.date || "";
+    modal.hidden = false;
+    document.body.style.overflow = "hidden";
+  };
+
+  const closeModal = () => {
+    if (!modal) return;
+    modal.hidden = true;
+    editingSrc = null;
+    document.body.style.overflow = "";
+  };
+
+  modalBackdrop?.addEventListener("click", closeModal);
+  modalClose?.addEventListener("click", closeModal);
+  modalCancel?.addEventListener("click", closeModal);
+
+  modalSave?.addEventListener("click", () => {
+    if (!editingSrc) return;
+
+    modalSave.disabled = true;
+    modalSave.textContent = "Saving…";
+
+    loadManifest(MANIFEST_ID, []).then((current) => {
+      const updated = current.map((m) =>
+        m.src === editingSrc
+          ? { ...m, caption: modalCaption.value.trim(), date: modalDate.value }
+          : m
+      );
+      return saveManifest(MANIFEST_ID, updated).then(() => {
+        allMemories = updated;
+        render();
+        closeModal();
+      });
+    })
+      .catch(() => alert("Couldn't save those changes — check your connection and try again."))
+      .finally(() => {
+        modalSave.disabled = false;
+        modalSave.textContent = "Save";
+      });
+  });
 
   const askCategory = () => {
     const raw = (window.prompt("Whose memory is this — mark, monica, or us?", "us") || "us")
@@ -179,10 +242,21 @@ document.addEventListener("DOMContentLoaded", () => {
       card.style.backgroundImage = `url(${optimizedUrl(memory.src, 400)})`;
       card.style.setProperty("--grad", grads[i % grads.length]);
       card.style.animationDelay = `${i * 0.06}s`;
+      card.setAttribute("role", "button");
+      card.setAttribute("tabindex", "0");
+      card.setAttribute("aria-label", "Edit this memory");
 
       const label = document.createElement("span");
       label.textContent = memory.caption || `Memory ${String(i + 1).padStart(2, "0")}`;
       card.appendChild(label);
+
+      const dateText = formatDate(memory.date);
+      if (dateText) {
+        const dateSpan = document.createElement("span");
+        dateSpan.className = "memory-date";
+        dateSpan.textContent = dateText;
+        card.appendChild(dateSpan);
+      }
 
       const del = document.createElement("button");
       del.type = "button";
@@ -202,6 +276,14 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       });
       card.appendChild(del);
+
+      card.addEventListener("click", () => openModal(memory));
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openModal(memory);
+        }
+      });
 
       card.addEventListener("animationend", () => {
         card.style.animation = "none";
