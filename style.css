@@ -371,7 +371,7 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   flex-direction: column;
   gap: 0.6rem;
   flex-shrink: 0;
-  width: 128px;
+  width: 150px;
   position: sticky;
   top: 1.5rem;
 }
@@ -386,6 +386,7 @@ p { color: var(--text-dim); line-height: 1.7; font-size: 1rem; }
   border-radius: 999px;
   padding: 0.55rem 1rem;
   text-align: center;
+  white-space: nowrap;
   cursor: pointer;
   transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
 }
