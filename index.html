@@ -7,6 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  
+  <style>body { opacity: 1 !important; transition: none !important; }</style>
   <script defer src="script.js"></script>
 </head>
 <body>
@@ -15,6 +17,17 @@
     <span class="page-loading-glyph">&#10084;</span>
     <div class="loading-spinner" aria-hidden="true"></div>
   </div>
+  <script>
+    
+    (function () {
+      var key = "you-and-me-loader-seen";
+      if (sessionStorage.getItem(key)) {
+        document.getElementById("page-loading-overlay").remove();
+      } else {
+        sessionStorage.setItem(key, "1");
+      }
+    })();
+  </script>
 
   <nav>
     <a href="index.html" class="nav-brand"><span class="glyph">&#10084;</span> You &amp; Me</a>
@@ -64,4 +77,4 @@
 
   <footer>made with care, just for you</footer>
 </body>
-</html>
+</html> 
