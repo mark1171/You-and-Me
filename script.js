@@ -1,11 +1,18 @@
-window.addEventListener("load", () => {
-  document.body.classList.add("loaded");
+const PAGE_LOAD_START = Date.now();
+const PAGE_LOADER_MIN_MS = 3200;
 
+window.addEventListener("load", () => {
   const pageLoader = document.getElementById("page-loading-overlay");
-  if (pageLoader) {
-    pageLoader.classList.add("hide");
-    pageLoader.addEventListener("transitionend", () => pageLoader.remove(), { once: true });
-  }
+  const elapsed = Date.now() - PAGE_LOAD_START;
+  const wait = pageLoader ? Math.max(0, PAGE_LOADER_MIN_MS - elapsed) : 0;
+
+  setTimeout(() => {
+    document.body.classList.add("loaded");
+    if (pageLoader) {
+      pageLoader.classList.add("hide");
+      pageLoader.addEventListener("transitionend", () => pageLoader.remove(), { once: true });
+    }
+  }, wait);
 });
 
 /* Upload a file straight to Cloudinary from the browser (no backend
